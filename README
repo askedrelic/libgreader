@@ -9,6 +9,6 @@ Goals:
 -Add most of the read-only APIs?
 
 History:
-0.1
+0.1 -- 10/27/09 
 -Connects to GR and receives auth token correctly.
 -Pulls down subscription list.
