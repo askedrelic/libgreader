@@ -1,5 +1,5 @@
 """
-Google Reader 0.1
+Google Reader 0.2
 Copyright (C) 2009  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 This program is free software: you can redistribute it and/or modify
@@ -23,9 +23,10 @@ Google may break this at anytime, not my fault.
 
 import urllib
 import urllib2
-from time import time
+import time
 import xml.dom.minidom
 import sys
+import simplejson as json
 
 #Set due to ascii/utf-8 problems with internet data
 reload(sys)
@@ -82,12 +83,48 @@ class GoogleReader:
         pass
 
     def getFeeds(self):
+        """
+        Returns a list of Feed objects containing all of a users subscriptions.
+        """
         return self.feedlist
 
-    def httpGet(self, request):
-        pass
+    def getReadingList(self):
+        """
+        Returns a list of everything the user still has to read?
+        """
+        return self._httpGet('http://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list')
 
-    def httpPost(self, request):
+    def getUserInfo(self):
+        """
+        Returns a dictionary of user info that google stores.
+        """
+        userJson = self._httpGet('http://www.google.com/reader/api/0/user-info')
+        return json.loads(userJson)
+
+    def getUserHumanAge(self):
+        """
+        Returns the human readable date of when the user signed up for google reader.
+        """
+        userinfo = self.getUserInfo()
+        timestamp = int(float(userinfo["signupTimeSec"]))
+        return time.strftime("%m/%d/%Y %H:%M", time.gmtime(timestamp))
+
+    def _httpGet(self, url, extraargs={}):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
+        #ck is a timecode to help google with caching
+        params = urllib.urlencode( {'ck':time.time(), 'client':'lolbot'} )
+        if len(extraargs):
+            params += '&' + urllib.urlencode( extraargs )
+        req = urllib2.Request(url + "?" + params)
+        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
+        r = urllib2.urlopen(req)
+        data = r.read()
+        r.close()
+        return data
+
+    def _httpPost(self, request):
         pass
 
     def buildSubscriptionList(self):
@@ -96,11 +133,7 @@ class GoogleReader:
 
         Returns true if succesful.
         """
-        req = urllib2.Request('http://www.google.com/reader/api/0/subscription/list')
-        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
-        r = urllib2.urlopen(req)
-        xmlSubs = r.read()
-        r.close()
+        xmlSubs = self._httpGet('http://www.google.com/reader/api/0/subscription/list')
 
         #Work through xml list of subscriptions
         dom = xml.dom.minidom.parseString(xmlSubs)
@@ -131,15 +164,13 @@ class GoogleReader:
         Request to google returns 4 values, SID is the only value we need.
         """
         params = urllib.urlencode( {'service':'reader','Email':self.username,'Passwd':self.password} )
-        conn = urllib2.urlopen('https://www.google.com/accounts/ClientLogin', params)
         try:
+            conn = urllib2.urlopen('https://www.google.com/accounts/ClientLogin', params)
             data = conn.read()
-        except IOError:
-            #wrong username/pass?
-            #handle error
-            pass
-        finally:
             conn.close()
+        except Exception:
+            print "Error getting the SID, have you entered a correct username and password?"
+            sys.exit()
 
         #Strip newline and non SID text.
         sid = data[4:208].strip()
@@ -154,15 +185,13 @@ class GoogleReader:
         """
         req = urllib2.Request('http://www.google.com/reader/api/0/token')
         req.add_header('Cookie', 'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
-        conn = urllib2.urlopen(req)
         try:
+            conn = urllib2.urlopen(req)
             token = conn.read()
-        except IOError:
-            #wrong sid?
-            #handle error
-            pass
-        finally:
             conn.close()
+        except Exception:
+            print "Error getting the token."
+            sys.exit()
 
         return token
 
