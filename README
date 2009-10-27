@@ -12,3 +12,7 @@ History:
 0.1 -- 10/27/09 
 -Connects to GR and receives auth token correctly.
 -Pulls down subscription list.
+
+v0.2 -- 10/27/09  
+-Moved all get requests to private convenience method
+-Added a few more basic data calls
