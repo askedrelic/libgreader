@@ -31,7 +31,7 @@ import simplejson as json
 
 #Set due to ascii/utf-8 problems with internet data
 reload(sys)
-sys.setdefaultencoding( "latin-1" )
+sys.setdefaultencoding( "utf-8" )
 
 class Feed:
     """
@@ -93,7 +93,7 @@ class GoogleReader:
 
     def getReadingList(self, numResults=50):
         """
-        The list of everything the user has not currently read.
+        The 'All Items' list of everything the user has not read.
         
         Returns dict with items
         -update -- update timestamp
@@ -104,15 +104,17 @@ class GoogleReader:
         -self -- self url
         -id
         """
-        userJson = self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list', {'n':numResults})
-        return json.loads(userJson)
+        eargs = {'n':numResults}
+        userJson = self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list', eargs)
+        #from ipdb import set_trace; set_trace()
+        return json.loads(userJson, strict=False)
 
     def getUserInfo(self):
         """
         Returns a dictionary of user info that google stores.
         """
         userJson = self._httpGet('https://www.google.com/reader/api/0/user-info')
-        return json.loads(userJson)
+        return json.loads(userJson, strict=False)
 
     def getUserSignupDate(self):
         """
