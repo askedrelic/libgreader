@@ -63,16 +63,18 @@ class GoogleReader:
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, client):
         """
         Key args:
         username (str)
         password (str)
+        client (str) - name of client accessing Google Reader
 
         Sets up secure Reader connection via _getToken and _getSID or fails.
         """
         self.username = username
         self.password = password
+        self.client = client
         self.sid = self._getSID()
         self.token = self._getToken(self.sid)
         self.feedlist = []
@@ -89,11 +91,21 @@ class GoogleReader:
         """
         return self.feedlist
 
-    def getReadingList(self):
+    def getReadingList(self, numResults=50):
         """
-        Returns a list of everything the user still has to read?
+        The list of everything the user has not currently read.
+        
+        Returns dict with items
+        -update -- update timestamp
+        -author -- username
+        -continuation
+        -title -- page title "(users)'s reading list in Google Reader"
+        -items -- feed items
+        -self -- self url
+        -id
         """
-        return self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list')
+        userJson = self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list', {'n':numResults})
+        return json.loads(userJson)
 
     def getUserInfo(self):
         """
@@ -102,31 +114,13 @@ class GoogleReader:
         userJson = self._httpGet('https://www.google.com/reader/api/0/user-info')
         return json.loads(userJson)
 
-    def getUserHumanAge(self):
+    def getUserSignupDate(self):
         """
         Returns the human readable date of when the user signed up for google reader.
         """
         userinfo = self.getUserInfo()
         timestamp = int(float(userinfo["signupTimeSec"]))
         return time.strftime("%m/%d/%Y %H:%M", time.gmtime(timestamp))
-
-    def _httpGet(self, url, extraargs={}):
-        """
-        Convenience method for requesting to google with proper cookies/params.
-        """
-        #ck is a timecode to help google with caching
-        params = urllib.urlencode( {'ck':time.time(), 'client':'lolbot'} )
-        if len(extraargs):
-            params += '&' + urllib.urlencode( extraargs )
-        req = urllib2.Request(url + "?" + params)
-        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
-        r = urllib2.urlopen(req)
-        data = r.read()
-        r.close()
-        return data
-
-    def _httpPost(self, request):
-        pass
 
     def buildSubscriptionList(self):
         """
@@ -154,6 +148,24 @@ class GoogleReader:
             self._addFeeds(feed)
 
         return True
+
+    def _httpGet(self, url, extraargs={}):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
+        #ck is a timecode to help google with caching
+        params = urllib.urlencode( {'ck':time.time(), 'client':self.client} )
+        if len(extraargs):
+            params += '&' + urllib.urlencode( extraargs )
+        req = urllib2.Request(url + "?" + params)
+        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
+        r = urllib2.urlopen(req)
+        data = r.read()
+        r.close()
+        return data
+
+    def _httpPost(self, request):
+        pass
         
     def _addFeeds (self, feed):
         self.feedlist.append(feed)
@@ -198,7 +210,7 @@ class GoogleReader:
 
 
 def main():
-    reader = GoogleReader('email addy','password')
+    reader = GoogleReader('email addy','password', 'client name')
     if reader.buildSubscriptionList():
         for feed in reader.getFeeds():
             print feed.title, feed.url, feed.categories
