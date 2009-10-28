@@ -16,9 +16,10 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
-Convenience methods and data types for working with the "unofficial" Google Reader API.
+Python library for working with the Google Reader API.
 Google may break this at anytime, not my fault.
 
+Uses HTTPS for all requests.
 """
 
 import urllib
@@ -92,13 +93,13 @@ class GoogleReader:
         """
         Returns a list of everything the user still has to read?
         """
-        return self._httpGet('http://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list')
+        return self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list')
 
     def getUserInfo(self):
         """
         Returns a dictionary of user info that google stores.
         """
-        userJson = self._httpGet('http://www.google.com/reader/api/0/user-info')
+        userJson = self._httpGet('https://www.google.com/reader/api/0/user-info')
         return json.loads(userJson)
 
     def getUserHumanAge(self):
@@ -133,7 +134,7 @@ class GoogleReader:
 
         Returns true if succesful.
         """
-        xmlSubs = self._httpGet('http://www.google.com/reader/api/0/subscription/list')
+        xmlSubs = self._httpGet('https://www.google.com/reader/api/0/subscription/list')
 
         #Work through xml list of subscriptions
         dom = xml.dom.minidom.parseString(xmlSubs)
@@ -183,7 +184,7 @@ class GoogleReader:
 
         Request to google returns just a token value.
         """
-        req = urllib2.Request('http://www.google.com/reader/api/0/token')
+        req = urllib2.Request('https://www.google.com/reader/api/0/token')
         req.add_header('Cookie', 'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
         try:
             conn = urllib2.urlopen(req)

@@ -1,4 +1,4 @@
-Convenience methods and data types for working with the "unofficial" Google Reader API.
+Python library for working with the Google Reader API.
 Google may break this at anytime, not my fault.
 
 Created with help from:
