@@ -1,20 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """
 Google Reader 0.2
 Copyright (C) 2009  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
 
 Python library for working with the Google Reader API.
 Google may break this at anytime, not my fault.
@@ -22,16 +11,24 @@ Google may break this at anytime, not my fault.
 Uses HTTPS for all requests.
 """
 
+__author__  = "Matt Behrens <askedrelic@gmail.com>"
+__version__ = "0.2"
+
+import logging
+import sys
 import urllib
 import urllib2
 import time
 import xml.dom.minidom
-import sys
 import simplejson as json
 
-#Set due to ascii/utf-8 problems with internet data
+#Reset due to ascii/utf-8 problems with internet data
 reload(sys)
 sys.setdefaultencoding( "utf-8" )
+
+logging.basicConfig()
+logger = logging.getLogger("libgreader")
+logger.setLevel(logging.DEBUG)
 
 class Feed:
     """
