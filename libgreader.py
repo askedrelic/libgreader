@@ -185,8 +185,8 @@ class GoogleReader:
             sys.exit()
 
         #Strip newline and non SID text.
-        sid = data[4:208].strip()
-        return sid
+        sid_dict = dict(x.split('=') for x in data.split('\n') if x)
+        return sid_dict["SID"]
 
     def _getToken(self, sid):
         """
