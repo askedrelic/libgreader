@@ -5,10 +5,13 @@
 Google Reader 0.2
 Copyright (C) 2009  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
-Python library for working with the Google Reader API.
-Google may break this at anytime, not my fault.
+Python library for working with the unofficial Google Reader API.
+Google may break this at anytime, I am not responsible for damages from that
+breakage, but I will try my best to fix it.
 
-Uses HTTPS for all requests.
+Uses HTTPS for all requests to and from Google.
+
+Licensing included in LICENSE.txt
 """
 
 __author__  = "Matt Behrens <askedrelic@gmail.com>"
@@ -19,16 +22,19 @@ import sys
 import urllib
 import urllib2
 import time
+
 import xml.dom.minidom
 import simplejson as json
 
 #Reset due to ascii/utf-8 problems with internet data
 reload(sys)
-sys.setdefaultencoding( "utf-8" )
+sys.setdefaultencoding("utf-8")
 
 logging.basicConfig()
 logger = logging.getLogger("libgreader")
 logger.setLevel(logging.DEBUG)
+
+READER_BASE_URL = 'https://www.google.com/reader/api/0/'
 
 class Feed:
     """
@@ -74,7 +80,7 @@ class GoogleReader:
         self.client = client
         self.sid = self._getSID()
         self.token = self._getToken(self.sid)
-        self.feedlist = []
+        self.feedlist = None
 
     def toJSON(self):
         """
@@ -84,7 +90,8 @@ class GoogleReader:
 
     def getFeeds(self):
         """
-        Returns a list of Feed objects containing all of a users subscriptions.
+        Returns a list of Feed objects containing all of a users subscriptions
+        or None if buildSubscriptionList has not been called, to get the Feeds
         """
         return self.feedlist
 
@@ -102,7 +109,8 @@ class GoogleReader:
         -id
         """
         eargs = {'n':numResults}
-        userJson = self._httpGet('https://www.google.com/reader/api/0/stream/contents/user/-/state/com.google/reading-list', eargs)
+        userJson = self._httpGet(READER_BASE_URL +
+                'stream/contents/user/-/state/com.google/reading-list', eargs)
         #from ipdb import set_trace; set_trace()
         return json.loads(userJson, strict=False)
 
@@ -110,7 +118,7 @@ class GoogleReader:
         """
         Returns a dictionary of user info that google stores.
         """
-        userJson = self._httpGet('https://www.google.com/reader/api/0/user-info')
+        userJson = self._httpGet(READER_BASE_URL + 'user-info')
         return json.loads(userJson, strict=False)
 
     def getUserSignupDate(self):
@@ -127,7 +135,7 @@ class GoogleReader:
 
         Returns true if succesful.
         """
-        xmlSubs = self._httpGet('https://www.google.com/reader/api/0/subscription/list')
+        xmlSubs = self._httpGet(READER_BASE_URL + 'subscription/list')
 
         #Work through xml list of subscriptions
         dom = xml.dom.minidom.parseString(xmlSubs)
@@ -167,6 +175,8 @@ class GoogleReader:
         pass
         
     def _addFeeds (self, feed):
+        if not self.feedlist:
+            self.feedlist = []
         self.feedlist.append(feed)
 
     def _getSID(self):
@@ -175,7 +185,9 @@ class GoogleReader:
 
         Request to google returns 4 values, SID is the only value we need.
         """
-        params = urllib.urlencode( {'service':'reader','Email':self.username,'Passwd':self.password} )
+        params = urllib.urlencode( {'service':'reader',
+                                    'Email':self.username,
+                                    'Passwd':self.password} )
         try:
             conn = urllib2.urlopen('https://www.google.com/accounts/ClientLogin', params)
             data = conn.read()
@@ -195,8 +207,9 @@ class GoogleReader:
 
         Request to google returns just a token value.
         """
-        req = urllib2.Request('https://www.google.com/reader/api/0/token')
-        req.add_header('Cookie', 'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
+        req = urllib2.Request(READER_BASE_URL + 'token')
+        req.add_header('Cookie',
+                       'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
         try:
             conn = urllib2.urlopen(req)
             token = conn.read()
