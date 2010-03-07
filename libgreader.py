@@ -57,7 +57,7 @@ class Feed:
 
 class GoogleReader:
     """
-    Class for using the unofficial Google Reader API and working with 
+    Class for using the unofficial Google Reader API and working with
     the data it returns.
 
     Requires valid google username and password.
@@ -98,7 +98,7 @@ class GoogleReader:
     def getReadingList(self, numResults=50):
         """
         The 'All Items' list of everything the user has not read.
-        
+
         Returns dict with items
         -update -- update timestamp
         -author -- username
@@ -173,7 +173,7 @@ class GoogleReader:
 
     def _httpPost(self, request):
         pass
-        
+
     def _addFeeds (self, feed):
         if not self.feedlist:
             self.feedlist = []
@@ -182,20 +182,21 @@ class GoogleReader:
     def _getSID(self):
         """
         First step in authorizing with google reader.
-
         Request to google returns 4 values, SID is the only value we need.
+
+        Returns SID or raises URLError on error.
         """
         params = urllib.urlencode( {'service':'reader',
                                     'Email':self.username,
                                     'Passwd':self.password} )
         try:
-            conn = urllib2.urlopen('https://www.google.com/accounts/ClientLogin', params)
+            conn = urllib2.urlopen('https://www.google.com/accounts/ClientLogin',
+                                    params)
             data = conn.read()
             conn.close()
         except Exception:
-            print "Error getting the SID, have you entered a correct username and password?"
-            sys.exit()
-
+            raise urllib2.URLError("Error getting the SID, \
+                have you entered a correct username and password?"
         #Strip newline and non SID text.
         sid_dict = dict(x.split('=') for x in data.split('\n') if x)
         return sid_dict["SID"]
@@ -203,23 +204,20 @@ class GoogleReader:
     def _getToken(self, sid):
         """
         Second step in authorizing with google reader.
-        Requires SID from first step.
+        Sends request to Google with SID and returns a token value.
 
-        Request to google returns just a token value.
+        Returns SID or raises URLError on error.
         """
         req = urllib2.Request(READER_BASE_URL + 'token')
         req.add_header('Cookie',
-                       'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
+            'name=SID;SID=%s;domain=.google.com;path=/;expires=1600000' % sid)
         try:
             conn = urllib2.urlopen(req)
             token = conn.read()
             conn.close()
         except Exception:
-            print "Error getting the token."
-            sys.exit()
-
+            raise urllib2.URLError("Error getting the token.")
         return token
-
 
 def main():
     reader = GoogleReader('email addy','password', 'client name')
