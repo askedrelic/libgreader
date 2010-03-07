@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 
 """
-Google Reader 0.2
-Copyright (C) 2009  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
+libG(oogle)Reader
+Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 Google may break this at anytime, I am not responsible for damages from that
@@ -15,7 +15,7 @@ Licensing included in LICENSE.txt
 """
 
 __author__  = "Matt Behrens <askedrelic@gmail.com>"
-__version__ = "0.2"
+__version__ = "0.3"
 
 import logging
 import sys
