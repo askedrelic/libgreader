@@ -1,4 +1,4 @@
-Python library for working with the Google Reader API.
+Python library for working with the unofficial Google Reader API.
 Google may break this at anytime, not my fault.
 
 Created with help from:
@@ -7,12 +7,19 @@ http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI
 
 Goals:
 -Add most of the read-only APIs?
+-Add to PyPi
 
 History:
-0.1 -- 10/27/09 
+v0.1 -- 2009/10/27
 -Connects to GR and receives auth token correctly.
 -Pulls down subscription list.
 
-v0.2 -- 10/27/09  
+v0.2 -- 2009/10/27
 -Moved all get requests to private convenience method
 -Added a few more basic data calls
+
+v0.3 -- 2010/03/07
+-All requests to Google use HTTPS
+-CLeaned up formatting, should mostly meet PEP8
+-Fixed random unicode issues
+-Added licensing
