@@ -195,8 +195,8 @@ class GoogleReader:
             data = conn.read()
             conn.close()
         except Exception:
-            raise urllib2.URLError("Error getting the SID, \
-                have you entered a correct username and password?"
+            raise urllib2.URLError("Error getting the SID,\
+ have you entered a correct username and password?")
         #Strip newline and non SID text.
         sid_dict = dict(x.split('=') for x in data.split('\n') if x)
         return sid_dict["SID"]
