@@ -254,16 +254,20 @@ class OAuthMethod(AuthenticationMethod):
         self.authorized_client = None
         self.token_key = None
         self.token_secret = None
+        self.callback = None
 
     def setCallback(self, callback_url):
-        OAuthMethod.REQUEST_TOKEN_URL += '&oauth_callback=%s' % callback_url
+        self.callback = '&oauth_callback=%s' % callback_url
 
     def setRequestToken(self):
         # Step 1: Get a request token. This is a temporary token that is used for
         # having the user authorize an access token and to sign the request to obtain
         # said access token.
         client = oauth.Client(self.consumer)
-        resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL)
+        if not self.callback:
+            resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL)
+        else:
+            resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL + self.callback)
         if int(resp['status']) != 200:
             raise IOError("Error setting Request Token")
         token_dict = dict(urlparse.parse_qsl(content))
