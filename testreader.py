@@ -40,6 +40,18 @@ class TestReaderFunctions(unittest.TestCase):
         self.assertEqual(dict, type(info))
         #self.assertEqual('relic', info['userName'])
 
+oauth_key = "www.asktherelic.com"
+oauth_secret = "WtAfQlY4+MJqsge45b9VuwNn"
+callback = "http://www.asktherelic.com:8000"
+
+ca = OAuthMethod(oauth_key, oauth_secret)
+ca.setCallback(callback)
+c1, c2 =  ca.setAndGetRequestToken()
+print ca.buildAuthUrl()
+accepted = 'n'
+while accepted.lower() == 'n':
+    accepted = raw_input('Have you authorized me? (y/n) ')
+ca.setAccessTokenFromCallback(c1, c2, raw_input('verifier'))
 suite = unittest.TestLoader().loadTestsFromTestCase(TestReaderFunctions)
 #suite = unittest.TestLoader().loadTestsFromTestCase(TestClientAuth)
 unittest.TextTestRunner(verbosity=2).run(suite)
