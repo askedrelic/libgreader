@@ -50,103 +50,6 @@ class Feed:
         self.url = url
         self.categories = categories
 
-class AuthenticationMethod(object):
-    """
-    Defines an interface for authentication methods, must have a get method
-    make this abstract?
-    1. auth on setup
-    2. need to have GET method
-    """
-
-    def get(self, url, parameters):
-        #basic http getting method for both auth methods
-        raise NotImplementedError
-
-class ClientAuth(AuthenticationMethod):
-    """
-    require a google username and password
-
-    send
-    """
-    CLIENT_URL = 'https://www.google.com/accounts/ClientLogin'
-
-    def __init__(self, username, password):
-        self.client = "libgreader" #TEST: is this needed?
-        self.username = username
-        self.password = password
-        self.sid = self._getSID()
-        self.token = self._getToken(self.sid)
-
-    def get(self, url, extraargs):
-        """
-        Convenience method for requesting to google with proper cookies/params.
-        """
-        #ck is a timecode to help google with caching
-        parameters = {'ck':time.time(), 'client':self.client}
-        if extraargs:
-            parameters.update(extraargs)
-        parameters = urllib.urlencode(parameters)
-        req = urllib2.Request(url + "?" + parameters)
-        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
-        r = urllib2.urlopen(req)
-        data = r.read()
-        r.close()
-        return data
-
-    def _getSID(self):
-        """
-        First step in authorizing with google reader.
-        Request to google returns 4 values, SID is the only value we need.
-
-        Returns SID or raises URLError on error.
-        """
-        parameters = urllib.urlencode({'service':'reader',
-                                        'Email':self.username,
-                                        'Passwd':self.password})
-        try:
-            conn = urllib2.urlopen(ClientAuth.CLIENT_URL,parameters)
-            data = conn.read()
-            conn.close()
-        except Exception:
-            raise urllib2.URLError("Error getting the SID, have you entered a"
-                    "correct username and password?")
-        #Strip newline and non SID text.
-        sid_dict = dict(x.split('=') for x in data.split('\n') if x)
-        return sid_dict["SID"]
-
-    def _getToken(self, sid):
-        """
-        Second step in authorizing with google reader.
-        Sends request to Google with SID and returns a token value.
-
-        Returns SID or raises URLError on error.
-        """
-        req = urllib2.Request(GoogleReader.API_URL + 'token')
-        req.add_header('Cookie','name=SID;SID=%s;domain=.google.com;'
-                                'path=/;expires=1600000' % sid)
-        try:
-            conn = urllib2.urlopen(req)
-            token = conn.read()
-            conn.close()
-        except Exception:
-            raise urllib2.URLError("Error getting the token.")
-        return token
-
-class OAuthMethod(AuthenticationMethod):
-    """
-    require an oauth key and secret
-
-    how to setup callback? noncallback?
-    """
-
-    def __init__(self, username, password, client):
-        """
-        """
-        self.username = username
-        self.password = password
-        self.sid = self._getSID()
-        self.token = self._getToken(self.sid)
-
 class GoogleReader(object):
     """
     Class for using the unofficial Google Reader API and working with
@@ -251,3 +154,164 @@ class GoogleReader(object):
 
     def _addFeeds (self, feed):
         self.feedlist.append(feed)
+
+class AuthenticationMethod(object):
+    """
+    Defines an interface for authentication methods, must have a get method
+    make this abstract?
+    1. auth on setup
+    2. need to have GET method
+    """
+
+    def get(self, url, parameters):
+        #basic http getting method for both auth methods
+        raise NotImplementedError
+
+class ClientAuth(AuthenticationMethod):
+    """
+    require a google username and password
+
+    send
+    """
+    CLIENT_URL = 'https://www.google.com/accounts/ClientLogin'
+
+    def __init__(self, username, password):
+        self.client = "libgreader" #TEST: is this needed?
+        self.username = username
+        self.password = password
+        self.sid = self._getSID()
+        self.token = self._getToken(self.sid)
+
+    def get(self, url, extraargs):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
+        #ck is a timecode to help google with caching
+        parameters = {'ck':time.time(), 'client':self.client}
+        if extraargs:
+            parameters.update(extraargs)
+        parameters = urllib.urlencode(parameters)
+        req = urllib2.Request(url + "?" + parameters)
+        req.add_header('Cookie', 'SID=%s;T=%s' % (self.sid, self.token))
+        r = urllib2.urlopen(req)
+        data = r.read()
+        r.close()
+        return data
+
+    def _getSID(self):
+        """
+        First step in authorizing with google reader.
+        Request to google returns 4 values, SID is the only value we need.
+
+        Returns SID or raises IOError on error.
+        """
+        parameters = urllib.urlencode({'service':'reader',
+                                        'Email':self.username,
+                                        'Passwd':self.password})
+        try:
+            conn = urllib2.urlopen(ClientAuth.CLIENT_URL,parameters)
+            data = conn.read()
+            conn.close()
+        except Exception:
+            raise IOError("Error getting the SID, have you entered a"
+                    "correct username and password?")
+        #Strip newline and non SID text.
+        sid_dict = dict(x.split('=') for x in data.split('\n') if x)
+        return sid_dict["SID"]
+
+    def _getToken(self, sid):
+        """
+        Second step in authorizing with google reader.
+        Sends request to Google with SID and returns a token value.
+
+        Returns SID or raises IOError on error.
+        """
+        req = urllib2.Request(GoogleReader.API_URL + 'token')
+        req.add_header('Cookie','name=SID;SID=%s;domain=.google.com;'
+                                'path=/;expires=1600000' % sid)
+        try:
+            conn = urllib2.urlopen(req)
+            token = conn.read()
+            conn.close()
+        except Exception:
+            raise IOError("Error getting the token.")
+        return token
+
+class OAuthMethod(AuthenticationMethod):
+    """
+    Loose wrapper around OAuth2 lib. Kinda awkward.
+    """
+    GOOGLE_URL = 'https://www.google.com/accounts/'
+    REQUEST_TOKEN_URL = (GOOGLE_URL + 'OAuthGetRequestToken?scope=%s'
+            % GoogleReader.READER_BASE_URL)
+    AUTHORIZE_URL = GOOGLE_URL + 'OAuthAuthorizeToken'
+    ACCESS_TOKEN_URL = GOOGLE_URL + 'OAuthGetAccessToken'
+
+    def __init__(self, consumer_key, consumer_secret):
+        self.oauth_key = consumer_key
+        self.oauth_secret = consumer_secret
+        self.consumer = oauth.Consumer(self.oauth_key, self.oauth_secret)
+        self.authorized_client = None
+        self.token_key = None
+        self.token_secret = None
+
+    def setCallback(self, callback_url):
+        OAuthMethod.REQUEST_TOKEN_URL += '&oauth_callback=%s' % callback_url
+
+    def setRequestToken(self):
+        # Step 1: Get a request token. This is a temporary token that is used for
+        # having the user authorize an access token and to sign the request to obtain
+        # said access token.
+        client = oauth.Client(self.consumer)
+        resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL)
+        if int(resp['status']) != 200:
+            raise IOError("Error setting Request Token")
+        token_dict = dict(urlparse.parse_qsl(content))
+        self.token_key = token_dict['oauth_token']
+        self.token_secret = token_dict['oauth_token_secret']
+
+    def setAndGetRequestToken(self):
+        self.setRequestToken()
+        return (self.token_key, self.token_secret)
+
+    def buildAuthUrl(self, token_key=None):
+        if not token_key:
+            token_key = self.token_key
+        #return auth url for user to click or redirect to
+        return "%s?oauth_token=%s" % (OAuthMethod.AUTHORIZE_URL, token_key)
+
+    def setAccessToken(self):
+        self.stepthreefromcallback(self.token_key, self.token_secret, None)
+
+    def setAccessTokenFromCallback(self, token_key, token_secret, verifier):
+        token = oauth.Token(token_key, token_secret)
+        #step 2 depends on callback
+        if verifier:
+            token.set_verifier(verifier)
+        client = oauth.Client(self.consumer, token)
+
+        resp, content = client.request(OAuthMethod.ACCESS_TOKEN_URL, "POST")
+        if int(resp['status']) != 200:
+            raise IOError("Error setting Access Token")
+        access_token = dict(urlparse.parse_qsl(content))
+
+        #created Authorized client using access tokens
+        self.authFromAccessToken(access_token['oauth_token'],
+                                 access_token['oauth_token_secret'])
+
+    def authFromAccessToken(self, oauth_token, oauth_token_secret):
+        self.token_key = oauth_token
+        self.token_key_secret = oauth_token_secret
+        token = oauth.Token(oauth_token,oauth_token_secret)
+        self.authorized_client = oauth.Client(self.consumer, token)
+
+    def getAccessToken(self):
+        return (self.token_key, self.token_secret)
+
+    def get(self, url, parameters=None):
+        #include parameters in call
+        if self.authorized_client:
+            resp,content = self.authorized_client.request(url)
+            return content
+        else:
+            raise IOError("No authorized client available.")
