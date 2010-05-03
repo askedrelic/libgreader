@@ -40,6 +40,8 @@ class TestReaderFunctions(unittest.TestCase):
         self.assertEqual(dict, type(info))
         #self.assertEqual('relic', info['userName'])
 
+<<<<<<< HEAD
+>>>>>>> origin/master
 callback = "http://www.asktherelic.com:8000"
 
 ca = OAuthMethod(oauth_key, oauth_secret)
