@@ -1,17 +1,18 @@
 #libgreader
-Python library for working with the unofficial Google Reader API.
-Google may break this at anytime, not my fault.
-Licensed under the MIT license: [http://www.opensource.org/licenses/mit-license.php]()
+Python library for working with the unofficial Google Reader API.  
+Google may break this at anytime, not my fault.  
+Licensed under the MIT license: [http://www.opensource.org/licenses/mit-license.php]()  
 
-Created with help from:
-[http://blog.martindoms.com/2009/08/15/using-the-google-reader-api-part-1/]()
-[http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI]()
+Created with help from:  
+[http://blog.martindoms.com/2009/08/15/using-the-google-reader-api-part-1/]()  
+[http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI]()  
 [http://groups.google.com/group/fougrapi]()
 
 ##Usage
 The library is currently broken into 2 parts: The Authentication class and the GoogleReader class. 
 
-The Authentication class authenticates itself and then provides a GET/POST method for making authenticated calls to Reader. Currently, ClientLogin and OAuth are supported.
+The Authentication class authenticates itself and then provides a GET/POST method for making authenticated calls to Reader.  
+Currently, ClientLogin and OAuth are supported.
 
 The GoogleReader class keeps of user data and all provides wrapper methods around Reader urls.
 
