@@ -65,34 +65,34 @@ class TestClientAuth(unittest.TestCase):
 
 class TestOAuth(unittest.TestCase):
     def test_oauth_login(self):
-        ca = OAuthMethod(oauth_key, oauth_secret)
-        self.assertNotEqual(ca, None)
+        auth = OAuthMethod(oauth_key, oauth_secret)
+        self.assertNotEqual(auth, None)
 
     def test_getting_request_token(self):
-        ca = OAuthMethod(oauth_key, oauth_secret)
-        token, token_secret = ca.setAndGetRequestToken()
-        url = ca.buildAuthUrl()
+        auth = OAuthMethod(oauth_key, oauth_secret)
+        token, token_secret = auth.setAndGetRequestToken()
+        url = auth.buildAuthUrl()
         response = automated_oauth_approval(url)
         self.assertNotEqual(-1,response.get_data().find('You have successfully granted'))
 
     def test_full_auth_process_without_callback(self):
-        ca = OAuthMethod(oauth_key, oauth_secret)
-        ca.setRequestToken()
-        auth_url = ca.buildAuthUrl()
+        auth = OAuthMethod(oauth_key, oauth_secret)
+        auth.setRequestToken()
+        auth_url = auth.buildAuthUrl()
         response = automated_oauth_approval(auth_url)
-        ca.setAccessToken()
-        reader = GoogleReader(ca)
+        auth.setAccessToken()
+        reader = GoogleReader(auth)
 
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
         self.assertEqual('relic', info['userName'])
 
     def test_full_auth_process_with_callback(self):
-        ca = OAuthMethod(oauth_key, oauth_secret)
+        auth = OAuthMethod(oauth_key, oauth_secret)
         #must be a working callback url for testing
-        ca.setCallback("http://www.asktherelic.com")
-        token, token_secret = ca.setAndGetRequestToken()
-        auth_url = ca.buildAuthUrl()
+        auth.setCallback("http://www.asktherelic.com")
+        token, token_secret = auth.setAndGetRequestToken()
+        auth_url = auth.buildAuthUrl()
 
         #callback section
         #get response, which is a redirect to the callback url
@@ -101,8 +101,8 @@ class TestOAuth(unittest.TestCase):
         #grab the verifier token from the callback url query string
         token_verifier = urlparse.parse_qs(query_string)['oauth_verifier'][0]
 
-        ca.setAccessTokenFromCallback(token, token_secret, token_verifier)
-        reader = GoogleReader(ca)
+        auth.setAccessTokenFromCallback(token, token_secret, token_verifier)
+        reader = GoogleReader(auth)
 
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
