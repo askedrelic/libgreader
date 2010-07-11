@@ -11,10 +11,10 @@ Created with help from:
 ##Usage
 The library is currently broken into 2 parts: The Authentication class and the GoogleReader class. 
 
-The Authentication class authenticates itself and then provides a GET/POST method for making authenticated calls to Reader.  
+The Authentication class authenticates itself with Google and then provides a GET/POST method for making authenticated calls.  
 Currently, ClientLogin and OAuth are supported.
 
-The GoogleReader class keeps of user data and all provides wrapper methods around Reader urls.
+The GoogleReader class keeps track of user data and provides wrapper methods around known Reader urls.
 
 To get started using the ClientLogin auth type, create a new ClientAuth class:
 
