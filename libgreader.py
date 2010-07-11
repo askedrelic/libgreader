@@ -284,7 +284,7 @@ class OAuthMethod(AuthenticationMethod):
         return "%s?oauth_token=%s" % (OAuthMethod.AUTHORIZE_URL, token_key)
 
     def setAccessToken(self):
-        self.stepthreefromcallback(self.token_key, self.token_secret, None)
+        self.setAccessTokenFromCallback(self.token_key, self.token_secret, None)
 
     def setAccessTokenFromCallback(self, token_key, token_secret, verifier):
         token = oauth.Token(token_key, token_secret)
