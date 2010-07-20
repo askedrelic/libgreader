@@ -50,6 +50,12 @@ class Feed:
         self.url = url
         self.categories = categories
 
+    def toArray(self):
+        pass
+
+    def toJSON(self):
+        pass
+
 class GoogleReader(object):
     """
     Class for using the unofficial Google Reader API and working with
@@ -63,6 +69,7 @@ class GoogleReader(object):
     USER_INFO_URL = API_URL + 'user-info'
     SUBSCRIPTION_LIST_URL = API_URL + 'subscription/list'
     READING_LIST_URL = API_URL + 'stream/contents/user/-/state/com.google/reading-list'
+    UNREAD_COUNT_URL = API_URL + 'unread-count'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
@@ -84,45 +91,13 @@ class GoogleReader(object):
         """
         return self.feedlist
 
-    def getReadingList(self, numResults=50):
-        """
-        The 'All Items' list of everything the user has not read.
-
-        Returns dict with items
-        -update -- update timestamp
-        -author -- username
-        -continuation
-        -title -- page title "(users)'s reading list in Google Reader"
-        -items -- feed items
-        -self -- self url
-        -id
-        """
-        userJson = self._httpGet(GoogleReader.READING_LIST_URL, {'n':numResults})
-        return json.loads(userJson, strict=False)
-
-    def getUserInfo(self):
-        """
-        Returns a dictionary of user info that google stores.
-        """
-        userJson = self._httpGet(GoogleReader.USER_INFO_URL)
-        return json.loads(userJson, strict=False)
-
-    def getUserSignupDate(self):
-        """
-        Returns the human readable date of when the user signed up for google reader.
-        """
-        userinfo = self.getUserInfo()
-        timestamp = int(float(userinfo["signupTimeSec"]))
-        return time.strftime("%m/%d/%Y %H:%M", time.gmtime(timestamp))
-
     def buildSubscriptionList(self):
         """
         Hits Google Reader for a users's alphabetically ordered list of feeds.
 
         Returns true if succesful.
         """
-        print GoogleReader.SUBSCRIPTION_LIST_URL
-        xmlSubs = self._httpGet(GoogleReader.SUBSCRIPTION_LIST_URL)
+        xmlSubs = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL)
 
         #Work through xml list of subscriptions
         dom = xml.dom.minidom.parseString(xmlSubs)
@@ -143,7 +118,38 @@ class GoogleReader(object):
 
         return True
 
-    def _httpGet(self, url, parameters=None):
+    def getReadingList(self, numResults=50):
+        """
+        The 'All Items' list of everything the user has not read.
+
+        Returns dict with items
+        -update -- update timestamp
+        -author -- username
+        -continuation
+        -title -- page title "(users)'s reading list in Google Reader"
+        -items -- feed items
+        -self -- self url
+        -id
+        """
+        userJson = self.httpGet(GoogleReader.READING_LIST_URL, {'n':numResults, 'exclude':'read'})
+        return json.loads(userJson, strict=False)['items']
+
+    def getUserInfo(self):
+        """
+        Returns a dictionary of user info that google stores.
+        """
+        userJson = self.httpGet(GoogleReader.USER_INFO_URL)
+        return json.loads(userJson, strict=False)
+
+    def getUserSignupDate(self):
+        """
+        Returns the human readable date of when the user signed up for google reader.
+        """
+        userinfo = self.getUserInfo()
+        timestamp = int(float(userinfo["signupTimeSec"]))
+        return time.strftime("%m/%d/%Y %H:%M", time.gmtime(timestamp))
+
+    def httpGet(self, url, parameters=None):
         """
         Wrapper around AuthenticationMethod get()
         """
