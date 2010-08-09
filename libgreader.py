@@ -247,7 +247,7 @@ class ClientAuth(AuthenticationMethod):
             conn = urllib2.urlopen(req)
             token = conn.read()
             conn.close()
-        except Exception as e:
+        except Exception, e:
             raise IOError("Error getting the Reader token.")
         return token
 
