@@ -25,7 +25,11 @@ import time
 
 import xml.dom.minidom
 import simplejson as json
-import oauth2 as oauth
+try:
+    import oauth2 as oauth
+    has_oauth = True
+except:
+    has_oauth = False
 
 #Reset due to ascii/utf-8 problems with internet data
 reload(sys)
@@ -253,6 +257,8 @@ class OAuthMethod(AuthenticationMethod):
     ACCESS_TOKEN_URL = GOOGLE_URL + 'OAuthGetAccessToken'
 
     def __init__(self, consumer_key, consumer_secret):
+        if not has_oauth:
+            raise ImportError("No module named oauth2")
         self.oauth_key = consumer_key
         self.oauth_secret = consumer_secret
         self.consumer = oauth.Consumer(self.oauth_key, self.oauth_secret)
