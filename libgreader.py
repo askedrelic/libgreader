@@ -101,6 +101,8 @@ class GoogleReader(object):
 
         Returns true if succesful.
         """
+
+        self._clearFeeds()
         xmlSubs = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL)
 
         #Work through xml list of subscriptions
@@ -164,6 +166,9 @@ class GoogleReader(object):
 
     def _addFeeds (self, feed):
         self.feedlist.append(feed)
+
+    def _clearFeeds(self):
+        self.feedlist = []
 
 class AuthenticationMethod(object):
     """
