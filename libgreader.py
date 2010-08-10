@@ -15,7 +15,8 @@ Licensing included in LICENSE.txt
 """
 
 __author__  = "Matt Behrens <askedrelic@gmail.com>"
-__version__ = "0.3"
+__version__ = "0.4"
+__credits__ = "Matt Behrens <askedrelic@gmail.com>, Stephane Angel aka Twidi <s.angel@twidi.com>"
 
 import sys
 import urllib
@@ -23,7 +24,6 @@ import urllib2
 import urlparse
 import time
 
-import xml.dom.minidom
 import simplejson as json
 try:
     import oauth2 as oauth
@@ -35,24 +35,69 @@ except:
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+class Category:
+    """
+    Class for representing a category
+    """
+    
+    id     = ""
+    label  = ""
+    unread = 0
+    feeds  = []
+    
+    def __str(self):
+        return "<%s (%d), %s>" % (self.label, self.unread, self.id)
+        
+    def __init__(self, label, id):
+        """
+        Key args:
+        label (str)
+        id (str)
+        """
+        self.label = label
+        self.id = id
+        
+    def _addFeed(self, feed):
+        if not feed in self.feeds:
+            self.feeds.append(feed)
+            self.unread += feed.unread
+
 class Feed:
     """
     Class for representing an individual feed.
     """
+    
+    title      = ""
+    id         = ""
+    feed_url        = ""
+    unread     = 0
+    categories = []
 
     def __str__(self):
-        return "<%s, %s>" % (self.title, self.url)
+        return "<%s (%d), %s>" % (self.title, self.unread, self.url)
 
-    def __init__(self, title, url, categories=[]):
+    def __init__(self, title, id, site_url=None, unread=0, categories=[]):
         """
         Key args:
-        title (str)
-        url (str, possible urlparse obj?)
+        title (str, name of the feed)
+        id (str, id for google reader)
+        site_url (str, can be empty)
+        unread (int, number of unread items, 0 by default)
         categories (list) - list of all categories a feed belongs to, can be empty
         """
-        self.title = title
-        self.url = url
-        self.categories = categories
+        self.title    = title
+        self.id       = id
+        self.feed_url = self.id.lstrip('feed/')
+        self.url      = self.feed_url # for compatibility with libgreader 0.3
+        self.site_url = site_url
+        self.unread   = unread
+        for category in categories:
+            self._addCategory(category)
+        
+    def _addCategory(self, category):
+        if not category in self.categories:
+            self.categories.append(category)
+            category._addFeed(self)
 
     def toArray(self):
         pass
@@ -81,6 +126,7 @@ class GoogleReader(object):
     def __init__(self, auth):
         self.auth = auth
         self.feedlist = []
+        self.categories = []
 
     def toJSON(self):
         """
@@ -95,6 +141,13 @@ class GoogleReader(object):
         """
         return self.feedlist
 
+    def getCategories(self):
+        """
+        Returns a list of all the categories or None if buildSubscriptionList
+        has not been called, to get the Feeds
+        """
+        return self.categories
+
     def buildSubscriptionList(self):
         """
         Hits Google Reader for a users's alphabetically ordered list of feeds.
@@ -102,25 +155,29 @@ class GoogleReader(object):
         Returns true if succesful.
         """
 
-        self._clearFeeds()
-        xmlSubs = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL)
+        self._clearLists()
+        categoriesById = {}
+        unreadById     = {}
 
-        #Work through xml list of subscriptions
-        dom = xml.dom.minidom.parseString(xmlSubs)
-        #Object > List > subscription objects
-        subs = dom.firstChild.firstChild
-        for sub in subs.childNodes:
-            #Work through the dom for the important elements
-            url = str(sub.firstChild.firstChild.data.lstrip('feed/'))
-            title = str(sub.childNodes[1].firstChild.data)
-            categories = sub.childNodes[2]
-            #Build a python list of Feeds from Dom elements
-            catList = []
-            for cat in categories.childNodes:
-                catList.append(cat.childNodes[1].firstChild.data)
-            #Add Feed to the main list
-            feed = Feed(title,url,catList)
-            self._addFeeds(feed)
+        unreadJson = self.httpGet(GoogleReader.UNREAD_COUNT_URL, { 'output': 'json', })
+        unreadcounts = json.loads(unreadJson, strict=False)['unreadcounts']
+        for unread in unreadcounts:
+            unreadById[unread['id']] = unread['count']
+        
+        feedsJson = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL, { 'output': 'json', })
+        subscriptions = json.loads(feedsJson, strict=False)['subscriptions']
+
+        for sub in subscriptions:
+            categories = []
+            if 'categories' in sub:
+                for hCategory in sub['categories']:
+                    cId = hCategory['id']
+                    if not cId in categoriesById:
+                        categoriesById[cId] = Category(cId, hCategory['label'])
+                        self._addCategory(categoriesById[cId])
+                    categories.append(categoriesById[cId])
+            feed = Feed(sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'],  0), categories)
+            self._addFeed(feed)
 
         return True
 
@@ -164,11 +221,18 @@ class GoogleReader(object):
     def _httpPost(self, request):
         pass
 
-    def _addFeeds (self, feed):
+    def _addFeed(self, feed):
         self.feedlist.append(feed)
 
-    def _clearFeeds(self):
+    def _addCategory (self, category):
+        self.categories.append(category)
+
+    def _clearLists(self):
+        """
+        Clear all list before sync : feeds and categories
+        """
         self.feedlist = []
+        self.categories = []
 
 class AuthenticationMethod(object):
     """
