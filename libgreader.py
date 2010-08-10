@@ -40,11 +40,6 @@ class Category:
     Class for representing a category
     """
     
-    id     = ""
-    label  = ""
-    unread = 0
-    feeds  = []
-    
     def __str(self):
         return "<%s (%d), %s>" % (self.label, self.unread, self.id)
         
@@ -55,23 +50,29 @@ class Category:
         id (str)
         """
         self.label = label
-        self.id = id
+        self.id    = id
+        
+        self.unread = 0
+        self.feeds  = []
         
     def _addFeed(self, feed):
         if not feed in self.feeds:
             self.feeds.append(feed)
             self.unread += feed.unread
+            
+    def getFeeds(self):
+        return self.feeds
+
+    def toArray(self):
+        pass
+
+    def toJSON(self):
+        pass
 
 class Feed:
     """
     Class for representing an individual feed.
     """
-    
-    title      = ""
-    id         = ""
-    feed_url        = ""
-    unread     = 0
-    categories = []
 
     def __str__(self):
         return "<%s (%d), %s>" % (self.title, self.unread, self.url)
@@ -91,6 +92,8 @@ class Feed:
         self.url      = self.feed_url # for compatibility with libgreader 0.3
         self.site_url = site_url
         self.unread   = unread
+        
+        self.categories = []
         for category in categories:
             self._addCategory(category)
         
@@ -98,6 +101,9 @@ class Feed:
         if not category in self.categories:
             self.categories.append(category)
             category._addFeed(self)
+            
+    def getCategories(self):
+        return self.categories
 
     def toArray(self):
         pass
@@ -173,10 +179,10 @@ class GoogleReader(object):
                 for hCategory in sub['categories']:
                     cId = hCategory['id']
                     if not cId in categoriesById:
-                        categoriesById[cId] = Category(cId, hCategory['label'])
+                        categoriesById[cId] = Category(hCategory['label'], cId)
                         self._addCategory(categoriesById[cId])
                     categories.append(categoriesById[cId])
-            feed = Feed(sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'],  0), categories)
+            feed = Feed(sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
             self._addFeed(feed)
 
         return True
