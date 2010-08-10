@@ -40,7 +40,7 @@ class Category:
     Class for representing a category
     """
     
-    def __str(self):
+    def __str__(self):
         return "<%s (%d), %s>" % (self.label, self.unread, self.id)
         
     def __init__(self, label, id):
