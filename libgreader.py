@@ -133,7 +133,7 @@ class Item(object):
         self.feed   = self.googleReader.getFeed(item.get('origin', {}).get('streamId', None))
         self.title  = item['title']
         self.author = item.get('author', None)
-        self.content = item.get('content', {}).get('content', '')
+        self.content = item.get('content', item.get('summary', {})).get('content', '')
         
         # check original url
         self.url    = None
