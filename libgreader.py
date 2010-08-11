@@ -122,9 +122,20 @@ class GoogleReader(object):
     API_URL = READER_BASE_URL + '/0/'
 
     USER_INFO_URL = API_URL + 'user-info'
+    
     SUBSCRIPTION_LIST_URL = API_URL + 'subscription/list'
-    READING_LIST_URL = API_URL + 'stream/contents/user/-/state/com.google/reading-list'
     UNREAD_COUNT_URL = API_URL + 'unread-count'
+    
+    SPECIAL_ITEMS_URL   = API_URL + 'stream/contents/user/-/state/com.google/'
+    READING_LIST_URL    = SPECIAL_ITEMS_URL + 'reading-list'
+    READ_LIST_URL       = SPECIAL_ITEMS_URL + 'read'
+    KEPTUNREAD_LIST_URL = SPECIAL_ITEMS_URL + 'kept-unread'
+    STARRED_LIST_URL    = SPECIAL_ITEMS_URL + 'starred'
+    SHARED_LIST_URL     = SPECIAL_ITEMS_URL + 'broadcast'
+    NOTES_LIST_URL      = SPECIAL_ITEMS_URL + 'created'
+    FRIENDS_LIST_URL    = SPECIAL_ITEMS_URL + 'broadcast-friends'
+    
+    FEED_URL = API_URL + 'stream/contents/'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
@@ -187,9 +198,15 @@ class GoogleReader(object):
 
         return True
 
-    def getReadingList(self, numResults=50):
+    def getReadingList(self, exclude='read'):
         """
         The 'All Items' list of everything the user has not read.
+        """
+        return self.getSpecialItemsList(self.READING_LIST_URL, {'exclude':exclude} )
+        
+    def getItemsList(self, url, parameters={}):
+        """
+        A list of items (from a feed or see URLs made with SPECIAL_ITEMS_URL)
 
         Returns dict with items
         -update -- update timestamp
@@ -200,8 +217,14 @@ class GoogleReader(object):
         -self -- self url
         -id
         """
-        userJson = self.httpGet(GoogleReader.READING_LIST_URL, {'n':numResults, 'exclude':'read'})
+        userJson = self.httpGet(url, parameters)
         return json.loads(userJson, strict=False)['items']
+        
+    def getFeedItemsList(self, feed, parameters={}):
+        """
+        Return items for a particular feed
+        """
+        return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), parameters)        
 
     def getUserInfo(self):
         """
