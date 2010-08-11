@@ -25,7 +25,11 @@ import time
 
 import xml.dom.minidom
 import simplejson as json
-import oauth2 as oauth
+try:
+    import oauth2 as oauth
+    has_oauth = True
+except:
+    has_oauth = False
 
 #Reset due to ascii/utf-8 problems with internet data
 reload(sys)
@@ -97,6 +101,8 @@ class GoogleReader(object):
 
         Returns true if succesful.
         """
+
+        self._clearFeeds()
         xmlSubs = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL)
 
         #Work through xml list of subscriptions
@@ -160,6 +166,9 @@ class GoogleReader(object):
 
     def _addFeeds (self, feed):
         self.feedlist.append(feed)
+
+    def _clearFeeds(self):
+        self.feedlist = []
 
 class AuthenticationMethod(object):
     """
@@ -238,7 +247,7 @@ class ClientAuth(AuthenticationMethod):
             conn = urllib2.urlopen(req)
             token = conn.read()
             conn.close()
-        except Exception as e:
+        except Exception, e:
             raise IOError("Error getting the Reader token.")
         return token
 
@@ -253,6 +262,8 @@ class OAuthMethod(AuthenticationMethod):
     ACCESS_TOKEN_URL = GOOGLE_URL + 'OAuthGetAccessToken'
 
     def __init__(self, consumer_key, consumer_secret):
+        if not has_oauth:
+            raise ImportError("No module named oauth2")
         self.oauth_key = consumer_key
         self.oauth_secret = consumer_secret
         self.consumer = oauth.Consumer(self.oauth_key, self.oauth_secret)
