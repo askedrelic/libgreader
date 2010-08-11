@@ -1,9 +1,17 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
-#if reader.buildSubscriptionList():
-#    for feed in reader.getFeeds():
-#        print feed.title, feed.url, feed.categories
-#
-#print reader.getUserInfo()
+"""
+libG(oogle)Reader
+Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
+
+Python library for working with the unofficial Google Reader API.
+
+Unit tests for libgreader. Just call this file to run!
+
+Requires mechanize for automated oauth authenication.
+
+"""
 
 import unittest
 
