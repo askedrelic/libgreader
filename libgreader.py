@@ -43,12 +43,14 @@ class Category:
     def __str__(self):
         return "<%s (%d), %s>" % (self.label, self.unread, self.id)
         
-    def __init__(self, label, id):
+    def __init__(self, googleReader, label, id):
         """
         Key args:
-        label (str)
-        id (str)
+          - label (str)
+          - id (str)
         """
+        self.googleReader = googleReader
+        
         self.label = label
         self.id    = id
         
@@ -77,15 +79,17 @@ class Feed:
     def __str__(self):
         return "<%s (%d), %s>" % (self.title, self.unread, self.url)
 
-    def __init__(self, title, id, site_url=None, unread=0, categories=[]):
+    def __init__(self, googleReader, title, id, site_url=None, unread=0, categories=[]):
         """
         Key args:
-        title (str, name of the feed)
-        id (str, id for google reader)
-        site_url (str, can be empty)
-        unread (int, number of unread items, 0 by default)
-        categories (list) - list of all categories a feed belongs to, can be empty
+          - title (str, name of the feed)
+          - id (str, id for google reader)
+          - site_url (str, can be empty)
+          - unread (int, number of unread items, 0 by default)
+          - categories (list) - list of all categories a feed belongs to, can be empty
         """
+        self.googleReader = googleReader
+
         self.title    = title
         self.id       = id
         self.feed_url = self.id.lstrip('feed/')
@@ -110,6 +114,45 @@ class Feed:
 
     def toJSON(self):
         pass
+        
+class Item(object):
+    """
+    Class for representing an individual item (an entry of a feed)
+    """
+
+    def __str__(self):
+        return '<"%s" by %s, %s>' % (self.title, self.author, self.id)
+    
+    def __init__(self, googleReader, item):
+        """
+        item : An item loaded from json
+        """
+        self.googleReader = googleReader
+        
+        self.id     = item['id']
+        self.feed   = self.googleReader.getFeed(item.get('origin', {}).get('streamId', None))
+        self.title  = item['title']
+        self.author = item.get('author', None)
+        self.content = item.get('content', {}).get('content', '')
+        
+        # check original url
+        self.url    = None
+        for alternate in item.get('alternate', []):
+            if alternate.get('type', '') == 'text/html':
+                self.url = alternate['href']
+                break
+                
+        # check status
+        self.unread  = True
+        self.starred = False
+        self.shared  = False
+        for category in item.get('categories', []):
+            if category.endswith('/state/com.google/read'):
+                self.unread = False
+            elif category.endswith('/state/com.google/starred'):
+                self.starred = True
+            elif category.endswith('/state/com.google/broadcast'):
+                self.shared = True
 
 class GoogleReader(object):
     """
@@ -143,8 +186,10 @@ class GoogleReader(object):
 
     def __init__(self, auth):
         self.auth = auth
-        self.feedlist = []
+        self.feeds = []
         self.categories = []
+        self.feedsById = {}
+        self.categoriesById = {}
 
     def toJSON(self):
         """
@@ -157,7 +202,7 @@ class GoogleReader(object):
         Returns a list of Feed objects containing all of a users subscriptions
         or None if buildSubscriptionList has not been called, to get the Feeds
         """
-        return self.feedlist
+        return self.feeds
 
     def getCategories(self):
         """
@@ -174,8 +219,7 @@ class GoogleReader(object):
         """
 
         self._clearLists()
-        categoriesById = {}
-        unreadById     = {}
+        unreadById = {}
 
         unreadJson = self.httpGet(GoogleReader.UNREAD_COUNT_URL, { 'output': 'json', })
         unreadcounts = json.loads(unreadJson, strict=False)['unreadcounts']
@@ -190,11 +234,11 @@ class GoogleReader(object):
             if 'categories' in sub:
                 for hCategory in sub['categories']:
                     cId = hCategory['id']
-                    if not cId in categoriesById:
-                        categoriesById[cId] = Category(hCategory['label'], cId)
-                        self._addCategory(categoriesById[cId])
-                    categories.append(categoriesById[cId])
-            feed = Feed(sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
+                    if not cId in self.categoriesById:
+                        category = Category(self, hCategory['label'], cId)
+                        self._addCategory(category)
+                    categories.append(self.categoriesById[cId])
+            feed = Feed(self, sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
             self._addFeed(feed)
 
         return True
@@ -202,36 +246,46 @@ class GoogleReader(object):
     def getReadingList(self, exclude='read'):
         """
         The 'All Items' list of everything the user has not read.
+        # KEPT FOR COMPATIBILITY WITH 0.3
         """
-        return self.getSpecialItemsList(self.READING_LIST_URL, {'exclude':exclude} )
+        return self.getItemsList(self.READING_LIST_URL, exclude_read=True )
         
-    def getItemsList(self, url, parameters={}):
+    def getItemsList(self, url, exclude_read=False):
         """
-        A list of items (from a feed or see URLs made with SPECIAL_ITEMS_URL)
+        A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
         Returns dict with items
-        -update -- update timestamp
-        -author -- username
-        -continuation
-        -title -- page title "(users)'s reading list in Google Reader"
-        -items -- feed items
-        -self -- self url
-        -id
+          - update (update timestamp)
+          - author (str, username)
+          - continuation
+          - title (str, page title)
+          - id (str)
+          - content (dict with content and direction)
+          - categories (list of categories including states or ones provided by the feed owner)
         """
-        userJson = self.httpGet(url, parameters)
-        return json.loads(userJson, strict=False)['items']
+        parameters = {}
+        if exclude_read:
+            parameters['exclude'] = 'read'
+        itemsJson = self.httpGet(url, parameters)
+        return json.loads(itemsJson, strict=False)['items']
         
-    def getFeedItemsList(self, feed, parameters={}):
+    def itemsToObjects(self, items):
+        objects = []
+        for item in items:
+            objects.append(Item(self, item))
+        return objects
+        
+    def getFeedItemsList(self, feed, exclude_read=False):
         """
         Return items for a particular feed
         """
-        return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), parameters)        
+        return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), exclude_read=False)
         
-    def getCategoryItemsList(self, category, parameters={}):
+    def getCategoryItemsList(self, category, exclude_read=False):
         """
         Return items for a particular category
         """
-        return self.getItemsList(self.CATEGORY_URL + urllib.quote(category.label), parameters)        
+        return self.getItemsList(self.CATEGORY_URL + urllib.quote(category.label), exclude_read=False)
 
     def getUserInfo(self):
         """
@@ -258,28 +312,26 @@ class GoogleReader(object):
         pass
 
     def _addFeed(self, feed):
-        self.feedlist.append(feed)
+        self.feedsById[feed.id] = feed
+        self.feeds.append(feed)
 
     def _addCategory (self, category):
+        self.categoriesById[category.id] = category
         self.categories.append(category)
         
-    def searchFeed(self, id):
-        try:
-            return [feed for feed in self.feedlist if feed.id == id][0]
-        except:
-            return None
+    def getFeed(self, id):
+        return self.feedsById.get(id, None)
         
-    def searchCategory(self, id):
-        try:
-            return [category for category in self.categories if category.id == id][0]
-        except:
-            return None
+    def getCategory(self, id):
+        return self.categoriesById.get(id, None)
 
     def _clearLists(self):
         """
         Clear all list before sync : feeds and categories
         """
-        self.feedlist = []
+        self.feedsById = {}
+        self.feeds = []
+        self.categoriesById = {}
         self.categories = []
 
 class AuthenticationMethod(object):
