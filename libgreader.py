@@ -135,7 +135,8 @@ class GoogleReader(object):
     NOTES_LIST_URL      = SPECIAL_ITEMS_URL + 'created'
     FRIENDS_LIST_URL    = SPECIAL_ITEMS_URL + 'broadcast-friends'
     
-    FEED_URL = API_URL + 'stream/contents/'
+    FEED_URL     = API_URL + 'stream/contents/'
+    CATEGORY_URL = API_URL + 'stream/contents/user/-/label/'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
@@ -225,6 +226,12 @@ class GoogleReader(object):
         Return items for a particular feed
         """
         return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), parameters)        
+        
+    def getCategoryItemsList(self, category, parameters={}):
+        """
+        Return items for a particular category
+        """
+        return self.getItemsList(self.CATEGORY_URL + urllib.quote(category.label), parameters)        
 
     def getUserInfo(self):
         """
@@ -255,6 +262,18 @@ class GoogleReader(object):
 
     def _addCategory (self, category):
         self.categories.append(category)
+        
+    def searchFeed(self, id):
+        try:
+            return [feed for feed in self.feedlist if feed.id == id][0]
+        except:
+            return None
+        
+    def searchCategory(self, id):
+        try:
+            return [category for category in self.categories if category.id == id][0]
+        except:
+            return None
 
     def _clearLists(self):
         """
