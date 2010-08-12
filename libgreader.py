@@ -215,6 +215,7 @@ class Item(object):
         self.googleReader = googleReader
         self.parent = parent
         
+        self.data   = item # save original data for accessing other fields
         self.id     = item['id']
         self.title  = item['title']
         self.author = item.get('author', None)
@@ -238,6 +239,18 @@ class Item(object):
                 self.starred = True
             elif category.endswith('/state/com.google/broadcast'):
                 self.shared = True
+
+        self.canUnread = item.get('isReadStateLocked', 'false') != 'true'
+
+        # keep feed, can be used when item si fetched from a special feed then it's the original one
+        try:
+            self.feed = self.googleReader.getFeed(item.get('origin', {}).get('streamId', None))
+        except:
+            try:
+                f = item.origin
+                self.feed = Feed(self, f['title'], f['streamId'], f.get('htmlUrl', None), 0, [])
+            except:
+                self.feed = None
 
         self.parent._addItem(self)
 
