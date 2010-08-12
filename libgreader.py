@@ -265,7 +265,7 @@ class GoogleReader(object):
         """
         parameters = {}
         if exclude_read:
-            parameters['exclude'] = 'read'
+            parameters['xt'] = 'user/-/state/com.google/read'
         itemsJson = self.httpGet(url, parameters)
         return json.loads(itemsJson, strict=False)['items']
         
@@ -279,13 +279,13 @@ class GoogleReader(object):
         """
         Return items for a particular feed
         """
-        return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), exclude_read=False)
+        return self.getItemsList(self.FEED_URL + urllib.quote(feed.id), exclude_read)
         
     def getCategoryItemsList(self, category, exclude_read=False):
         """
         Return items for a particular category
         """
-        return self.getItemsList(self.CATEGORY_URL + urllib.quote(category.label), exclude_read=False)
+        return self.getItemsList(self.CATEGORY_URL + urllib.quote(category.label), exclude_read)
 
     def getUserInfo(self):
         """
