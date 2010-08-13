@@ -281,7 +281,7 @@ class GoogleReader(object):
     NOTES_LIST      = 'created'
     FRIENDS_LIST    = 'broadcast-friends'
     SPECIAL_FEEDS = (READING_LIST, READ_LIST, KEPTUNREAD_LIST, STARRED_LIST, \
-                     SHARED_LIST, FRIENDS_LIST, )
+                     SHARED_LIST, FRIENDS_LIST, NOTES_LIST, )
     
     FEED_URL     = CONTENT_BASE_URL
     CATEGORY_URL = CONTENT_BASE_URL + 'user/-/label/'
