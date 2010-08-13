@@ -249,8 +249,7 @@ class Item(object):
         except:
             try:
                 self.feed = Feed(self, f['title'], f['streamId'], f.get('htmlUrl', None), 0, [])
-                print self
-            except Exception, e:
+            except:
                 self.feed = None
 
         self.parent._addItem(self)
