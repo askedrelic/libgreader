@@ -244,12 +244,13 @@ class Item(object):
 
         # keep feed, can be used when item si fetched from a special feed then it's the original one
         try:
-            self.feed = self.googleReader.getFeed(item.get('origin', {}).get('streamId', None))
+            f = item['origin']
+            self.feed = self.googleReader.getFeed(f['streamId'], None)
         except:
             try:
-                f = item.origin
                 self.feed = Feed(self, f['title'], f['streamId'], f.get('htmlUrl', None), 0, [])
-            except:
+                print self
+            except Exception, e:
                 self.feed = None
 
         self.parent._addItem(self)
