@@ -41,29 +41,49 @@ class ItemsContainer(object):
     """
     def __init__(self):
         self.items  = []
-        self.itemsLoaded = False
+        self.lastLoadOk = False
         self.unread = 0
+        self.continuation = None
         
-    def loadItems(self):
+    def _getContent(self,  excludeRead=False, continuation=None):
         """
-        Load items. Must be overloaded, and call itemsLoadedDone when finished
+        Get content from google reader with specified parameters.
+        Must be overladed in inherited clases
         """
-        pass
+        return None
         
-    def itemsLoadedDone(self, data):
+    def loadItems(self, excludeRead=False):
+        """
+        Load items and call itemsLoadedDone to transform data in objects
+        """
+        self.loadtLoadOk = False
+        self._itemsLoadedDone(self._getContent(excludeRead, None))
+        
+    def loadMoreItems(self, excludeRead=False):
+        """
+        Load more items using the continuation parameters of previously loaded items.
+        """
+        self.lastLoadOk = False
+        if not self.continuation:
+            return
+        self._itemsLoadedDone(self._getContent(excludeRead, self.continuation))
+        
+    def _itemsLoadedDone(self, data):
         """
         Called when all items are loaded
         """
+        if data is None:
+            return
         self.continuation = data.get('continuation', None)
         self.googleReader.itemsToObjects(self, data.get('items', []))
-        self.itemsLoaded = True
+        self.lastLoadOk = True
 
     def _addItem(self, item):
         self.items.append(item)
         
     def clearItems(self):
-        self.items = []
-        self.itemsLoaded = False
+        self.items        = []
+        self.continuation = None
         
     def getItems(self):
         return self.items
@@ -102,9 +122,9 @@ class Category(ItemsContainer):
             
     def getFeeds(self):
         return self.feeds
-        
-    def loadItems(self, excludeRead=False):
-        self.itemsLoadedDone(self.googleReader.getCategoryContent(self, excludeRead))
+
+    def _getContent(self, excludeRead=False, continuation=None):
+        return self.googleReader.getCategoryContent(self, excludeRead, continuation)
 
     def toArray(self):
         pass
@@ -149,8 +169,8 @@ class BaseFeed(ItemsContainer):
     def getCategories(self):
         return self.categories
         
-    def loadItems(self, excludeRead=False):
-        self.itemsLoadedDone(self.googleReader.getFeedContent(self, excludeRead))
+    def _getContent(self, excludeRead=False, continuation=None):
+        return self.googleReader.getFeedContent(self, excludeRead, continuation)
 
     def toArray(self):
         pass
@@ -356,7 +376,7 @@ class GoogleReader(object):
 
         return True
         
-    def _getFeedContent(self, url, excludeRead=False):
+    def _getFeedContent(self, url, excludeRead=False, continuation=None):
         """
         A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
@@ -374,6 +394,8 @@ class GoogleReader(object):
         parameters = {}
         if excludeRead:
             parameters['xt'] = 'user/-/state/com.google/read'
+        if continuation:
+            parameters['c'] = continuation
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
         
@@ -383,17 +405,17 @@ class GoogleReader(object):
             objects.append(Item(self, item, parent))
         return objects
         
-    def getFeedContent(self, feed, excludeRead=False):
+    def getFeedContent(self, feed, excludeRead=False, continuation=None):
         """
         Return items for a particular feed
         """
-        return self._getFeedContent(feed.fetchUrl, excludeRead)
+        return self._getFeedContent(feed.fetchUrl, excludeRead, continuation)
         
-    def getCategoryContent(self, category, excludeRead=False):
+    def getCategoryContent(self, category, excludeRead=False, continuation=None):
         """
         Return items for a particular category
         """
-        return self._getFeedContent(category.fetchUrl, excludeRead)
+        return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
 
     def getUserInfo(self):
         """
