@@ -98,6 +98,14 @@ class ItemsContainer(object):
             self.unread -= 1
         elif not read and item.isRead():
             self.unread += 1
+            
+    def markAllRead(self):
+        self.unread = 0
+        for item in self.items:
+            item.read = True
+            item.canUnread = False
+        result = self.googleReader.markFeedAsRead(self)
+        return result == 'Ok'
 
 class Category(ItemsContainer):
     """
@@ -138,10 +146,7 @@ class Category(ItemsContainer):
         return self.googleReader.getCategoryContent(self, excludeRead, continuation)
         
     def countUnread(self):
-        unread = 0
-        for feed in self.feeds:
-            unread += feed.unread
-        self.unread = unread
+        self.unread = sum([feed.unread for feed in self.feeds])
 
     def toArray(self):
         pass
@@ -193,6 +198,12 @@ class BaseFeed(ItemsContainer):
         super(BaseFeed, self).markItemRead(item, read)
         for category in self.categories:
             category.countUnread()
+
+    def markAllRead(self):
+        self.unread = 0
+        for category in self.categories:
+            category.countUnread()
+        return super(BaseFeed, self).markAllRead()
 
     def toArray(self):
         pass
@@ -398,6 +409,8 @@ class GoogleReader(object):
     TAG_READ     = 'user/-/state/com.google/read'
     TAG_STARRED  = 'user/-/state/com.google/starred'
     TAG_SHARED   = 'user/-/state/com.google/broadcast'
+    
+    MARK_ALL_READ_URL = API_URL + 'mark-all-as-read'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
@@ -511,10 +524,13 @@ class GoogleReader(object):
         return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
         
     def removeItemTag(self, item, tag):
-        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'r': tag, 'ac': 'edit-tags'})
+        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
             
     def addItemTag(self, item, tag):
-        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'a': tag, 'ac': 'edit-tags'})
+        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+        
+    def markFeedAsRead(self, feed):
+        return self.httpPost(GoogleReader.MARK_ALL_READ_URL, {'s': feed.id, })
 
     def getUserInfo(self):
         """
