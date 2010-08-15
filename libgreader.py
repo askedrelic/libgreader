@@ -105,7 +105,10 @@ class ItemsContainer(object):
             item.read = True
             item.canUnread = False
         result = self.googleReader.markFeedAsRead(self)
-        return result == 'Ok'
+        return result.upper() == 'OK'
+        
+    def countUnread(self):
+        self.unread = sum([1 for item in self.items if item.isUnread()])
 
 class Category(ItemsContainer):
     """
@@ -320,7 +323,7 @@ class Item(object):
                 result = self.googleReader.addItemTag(self, GoogleReader.TAG_READ)
             else:
                 result = self.googleReader.removeItemTag(self, GoogleReader.TAG_READ)
-            if result != 'Ok':
+            if result.upper()!= 'OK':
                 raise
             return True
         except:
@@ -339,7 +342,7 @@ class Item(object):
                 result = self.googleReader.addItemTag(self, GoogleReader.TAG_SHARED)
             else:
                 result = self.googleReader.removeItemTag(self, GoogleReader.TAG_SHARED)
-            if result != 'Ok':
+            if result.upper() != 'OK':
                 raise
             return True
         except:
@@ -361,7 +364,7 @@ class Item(object):
                 result = self.googleReader.addItemTag(self, GoogleReader.TAG_STARRED)
             else:
                 result = self.googleReader.removeItemTag(self, GoogleReader.TAG_STARRED)
-            if result != 'Ok':
+            if result.upper() != 'OK':
                 raise
             return True
         except:
