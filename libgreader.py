@@ -45,7 +45,7 @@ class ItemsContainer(object):
         self.unread = 0
         self.continuation = None
         
-    def _getContent(self,  excludeRead=False, continuation=None):
+    def _getContent(self, excludeRead=False, continuation=None):
         """
         Get content from google reader with specified parameters.
         Must be overladed in inherited clases
@@ -80,13 +80,24 @@ class ItemsContainer(object):
 
     def _addItem(self, item):
         self.items.append(item)
+        self.itemsById[item.id] = item
+        
+    def getItem(self, id):
+        return self.itemsById[id]
         
     def clearItems(self):
         self.items        = []
+        self.itemsById    = {}
         self.continuation = None
         
     def getItems(self):
         return self.items
+        
+    def markItemRead(self, item, read):
+        if read and item.isUnread():
+            self.unread -= 1
+        elif not read and item.isRead():
+            self.unread += 1
 
 class Category(ItemsContainer):
     """
@@ -125,6 +136,12 @@ class Category(ItemsContainer):
 
     def _getContent(self, excludeRead=False, continuation=None):
         return self.googleReader.getCategoryContent(self, excludeRead, continuation)
+        
+    def countUnread(self):
+        unread = 0
+        for feed in self.feeds:
+            unread += feed.unread
+        self.unread = unread
 
     def toArray(self):
         pass
@@ -171,6 +188,11 @@ class BaseFeed(ItemsContainer):
         
     def _getContent(self, excludeRead=False, continuation=None):
         return self.googleReader.getFeedContent(self, excludeRead, continuation)
+        
+    def markItemRead(self, item, read):
+        super(BaseFeed, self).markItemRead(item, read)
+        for category in self.categories:
+            category.countUnread()
 
     def toArray(self):
         pass
@@ -214,7 +236,6 @@ class Feed(BaseFeed):
         super(Feed, self).__init__(googleReader, title, id, unread, categories)
         
         self.feedUrl = self.id.lstrip('feed/')
-        self.url      = self.feedUrl # for compatibility with libgreader 0.3
         self.siteUrl = siteUrl
     
         self.fetchUrl = GoogleReader.FEED_URL + urllib.quote(self.id)
@@ -249,12 +270,12 @@ class Item(object):
                 break
                 
         # check status
-        self.unread  = True
+        self.read    = False
         self.starred = False
         self.shared  = False
         for category in item.get('categories', []):
             if category.endswith('/state/com.google/read'):
-                self.unread = False
+                self.read = True
             elif category.endswith('/state/com.google/starred'):
                 self.starred = True
             elif category.endswith('/state/com.google/broadcast'):
@@ -273,6 +294,73 @@ class Item(object):
                 self.feed = None
 
         self.parent._addItem(self)
+        
+    def isUnread(self):
+        return not self.read
+        
+    def isRead(self):
+        return self.read
+        
+    def markRead(self, read=True):
+        self.parent.markItemRead(self, read)
+        self.read = read
+        try:
+            if read:
+                result = self.googleReader.addItemTag(self, GoogleReader.TAG_READ)
+            else:
+                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_READ)
+            if result != 'Ok':
+                raise
+            return True
+        except:
+            return False
+            
+    def markUnread(self, unread=True):
+        return self.markRead(not unread)
+        
+    def isShared(self):
+        return self.shared
+        
+    def markShared(self, shared=True):
+        self.shared = shared
+        try:
+            if shared:
+                result = self.googleReader.addItemTag(self, GoogleReader.TAG_SHARED)
+            else:
+                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_SHARED)
+            if result != 'Ok':
+                raise
+            return True
+        except:
+            return False
+            
+    def share(self):
+        return self.markShared()
+
+    def unShare(self):
+        return self.markShared(False)
+        
+    def isStarred(self):
+        return self.starred
+        
+    def markStarred(self, starred=True):
+        self.starred = starred
+        try:
+            if starred:
+                result = self.googleReader.addItemTag(self, GoogleReader.TAG_STARRED)
+            else:
+                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_STARRED)
+            if result != 'Ok':
+                raise
+            return True
+        except:
+            return False
+            
+    def star(self):
+        return self.markStarred()
+        
+    def unStar(self):
+        return self.markStarred(False)
 
 class GoogleReader(object):
     """
@@ -305,6 +393,11 @@ class GoogleReader(object):
     
     FEED_URL     = CONTENT_BASE_URL
     CATEGORY_URL = CONTENT_BASE_URL + 'user/-/label/'
+    
+    EDIT_TAG_URL = API_URL + 'edit-tag'
+    TAG_READ     = 'user/-/state/com.google/read'
+    TAG_STARRED  = 'user/-/state/com.google/starred'
+    TAG_SHARED   = 'user/-/state/com.google/broadcast'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
@@ -416,6 +509,12 @@ class GoogleReader(object):
         Return items for a particular category
         """
         return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
+        
+    def removeItemTag(self, item, tag):
+        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'r': tag, 'ac': 'edit-tags'})
+            
+    def addItemTag(self, item, tag):
+        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'a': tag, 'ac': 'edit-tags'})
 
     def getUserInfo(self):
         """
@@ -438,8 +537,11 @@ class GoogleReader(object):
         """
         return self.auth.get(url, parameters)
 
-    def _httpPost(self, request):
-        pass
+    def httpPost(self, url, post_parameters=None):
+        """
+        Wrapper around AuthenticationMethod post()
+        """
+        return self.auth.post(url, post_parameters)
 
     def _addFeed(self, feed):
         self.feedsById[feed.id] = feed
@@ -472,9 +574,19 @@ class AuthenticationMethod(object):
     2. need to have GET method
     """
 
-    def get(self, url, parameters):
-        #basic http getting method for both auth methods
-        raise NotImplementedError
+    def getParameters(self, extraargs=None):
+        #ck is a timecode to help google with caching
+        parameters = {'ck':time.time(), 'client':self.client}
+        if extraargs:
+            parameters.update(extraargs)
+        return urllib.urlencode(parameters)
+        
+    def postParameters(self, post=None):
+        if post is not None:
+            post_string = urllib.urlencode(post)
+        else:
+            post_string = None
+        return post_string
 
 class ClientAuth(AuthenticationMethod):
     """
@@ -488,19 +600,32 @@ class ClientAuth(AuthenticationMethod):
         self.password = password
         self.auth_token = self._getAuth()
         self.token = self._getToken()
+        
+    def postParameters(self, post=None):
+        post.update({'T': self.token})
+        return super(ClientAuth, self).postParameters(post)
 
-    def get(self, url, extraargs):
+    def get(self, url, parameters=None):
         """
         Convenience method for requesting to google with proper cookies/params.
         """
-        #ck is a timecode to help google with caching
-        parameters = {'ck':time.time(), 'client':self.client}
-        if extraargs:
-            parameters.update(extraargs)
-        parameters = urllib.urlencode(parameters)
-        req = urllib2.Request(url + "?" + parameters)
+        getString = self.getParameters(parameters)
+        req = urllib2.Request(url + "?" + getString)
         req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
         r = urllib2.urlopen(req)
+        data = r.read()
+        r.close()
+        return data
+        
+    def post(self, url, postParameters=None, urlParameters=None):
+        if urlParameters:
+            getString = self.getParameters(urlParameters)
+            req = urllib2.Request(url + "?" + getString)
+        else:
+            req = urllib2.Request(url)
+        req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
+        postString = self.postParameters(postParameters)
+        r = urllib2.urlopen(req, data=postString)
         data = r.read()
         r.close()
         return data
@@ -623,9 +748,23 @@ class OAuthMethod(AuthenticationMethod):
         return (self.token_key, self.token_secret)
 
     def get(self, url, parameters=None):
-        #include parameters in call
         if self.authorized_client:
-            resp,content = self.authorized_client.request(url)
+            getString = self.getParameters(parameters)
+            req = urllib2.Request(url + "?" + getString)
+            resp,content = self.authorized_client.request(req)
+            return content
+        else:
+            raise IOError("No authorized client available.")
+
+    def post(self, url, postParameters=None, urlParameters=None):
+        if self.authorized_client:
+            if urlParameters:
+                getString = self.getParameters(urlParameters)
+                req = urllib2.Request(url + "?" + getString)
+            else:
+                req = urllib2.Request(url)
+            postString = self.postParameters(postParameters)
+            resp,content = self.authorized_client.request(req, method="POST", body=postString)
             return content
         else:
             raise IOError("No authorized client available.")
