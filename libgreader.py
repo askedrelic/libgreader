@@ -318,16 +318,11 @@ class Item(object):
     def markRead(self, read=True):
         self.parent.markItemRead(self, read)
         self.read = read
-        try:
-            if read:
-                result = self.googleReader.addItemTag(self, GoogleReader.TAG_READ)
-            else:
-                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_READ)
-            if result.upper()!= 'OK':
-                raise
-            return True
-        except:
-            return False
+        if read:
+            result = self.googleReader.addItemTag(self, GoogleReader.TAG_READ)
+        else:
+            result = self.googleReader.removeItemTag(self, GoogleReader.TAG_READ)
+        return result.upper() == 'OK'
             
     def markUnread(self, unread=True):
         return self.markRead(not unread)
@@ -337,16 +332,11 @@ class Item(object):
         
     def markShared(self, shared=True):
         self.shared = shared
-        try:
-            if shared:
-                result = self.googleReader.addItemTag(self, GoogleReader.TAG_SHARED)
-            else:
-                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_SHARED)
-            if result.upper() != 'OK':
-                raise
-            return True
-        except:
-            return False
+        if shared:
+            result = self.googleReader.addItemTag(self, GoogleReader.TAG_SHARED)
+        else:
+            result = self.googleReader.removeItemTag(self, GoogleReader.TAG_SHARED)
+        return result.upper() == 'OK'
             
     def share(self):
         return self.markShared()
@@ -359,16 +349,11 @@ class Item(object):
         
     def markStarred(self, starred=True):
         self.starred = starred
-        try:
-            if starred:
-                result = self.googleReader.addItemTag(self, GoogleReader.TAG_STARRED)
-            else:
-                result = self.googleReader.removeItemTag(self, GoogleReader.TAG_STARRED)
-            if result.upper() != 'OK':
-                raise
-            return True
-        except:
-            return False
+        if starred:
+            result = self.googleReader.addItemTag(self, GoogleReader.TAG_STARRED)
+        else:
+            result = self.googleReader.removeItemTag(self, GoogleReader.TAG_STARRED)
+        return result.upper() == 'OK'
             
     def star(self):
         return self.markStarred()
