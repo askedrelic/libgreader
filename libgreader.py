@@ -650,7 +650,7 @@ class ClientAuth(AuthenticationMethod):
             conn = urllib2.urlopen(ClientAuth.CLIENT_URL,parameters)
             data = conn.read()
             conn.close()
-        except Exception:
+        except urllib2.HTTPError:
             raise IOError("Error getting the Auth token, have you entered a"
                     "correct username and password?")
         #Strip newline and non token text.
@@ -670,7 +670,7 @@ class ClientAuth(AuthenticationMethod):
             conn = urllib2.urlopen(req)
             token = conn.read()
             conn.close()
-        except Exception, e:
+        except urllib2.HTTPError:
             raise IOError("Error getting the Reader token.")
         return token
 
