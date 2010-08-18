@@ -29,7 +29,9 @@ Then setup GoogleReader:
 Then make whatever requests you want:
 
 	print reader.getUserInfo()
-	print reader.getReadingList()
+	reader.makeSpecialFeeds()
+	feed = reader.getSpecialFeed(reader.READING_LIST)
+	print feed.getItems()
 	
 ###OAuth
 The OAuth method is a bit more complicated, depending on whether you want to use a callback or not, and because oauth is just complicated.
@@ -92,7 +94,15 @@ Todo:
 * More tests
 
 History:
-
+* v0.4 -- 2010/08/10
+	Lot of improvements : 
+	* Manage special feeds (reading-list, shared, starred, friends...)
+	* Manage categories (get all items, mark as read)
+	* Manage feeds (get items, unread couts, mark as read, "fetch more")
+	* Manage items (get and mark read, star, share)
+	* and:
+		* oauth2 not required if you don't use it
+		* replacing all xml calls by json ones
 * v0.3 -- 2010/03/07
     * All requests to Google use HTTPS
     * CLeaned up formatting, should mostly meet PEP8
