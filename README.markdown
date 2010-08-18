@@ -94,6 +94,7 @@ Todo:
 * More tests
 
 History:
+
 * v0.4 -- 2010/08/10
 	Lot of improvements : 
 	* Manage special feeds (reading-list, shared, starred, friends...)
