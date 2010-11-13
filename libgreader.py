@@ -24,7 +24,10 @@ import urllib2
 import urlparse
 import time
 
-import simplejson as json
+try:
+    import json
+except:
+    import simplejson as json
 try:
     import oauth2 as oauth
     has_oauth = True
@@ -40,10 +43,13 @@ class ItemsContainer(object):
     A base class used for all classes aimed to have items (Categories and Feeds)
     """
     def __init__(self):
-        self.items  = []
-        self.lastLoadOk = False
-        self.unread = 0
-        self.continuation = None
+        self.items          = []
+        self.itemsById      = {}
+        self.lastLoadOk     = False
+        self.lastLoadLength = 0
+        self.lastUpdated    = None
+        self.unread         = 0
+        self.continuation   = None
         
     def _getContent(self, excludeRead=False, continuation=None):
         """
@@ -56,17 +62,20 @@ class ItemsContainer(object):
         """
         Load items and call itemsLoadedDone to transform data in objects
         """
-        self.loadtLoadOk = False
+        self.clearItems()
+        self.loadtLoadOk    = False
+        self.lastLoadLength = 0
         self._itemsLoadedDone(self._getContent(excludeRead, None))
         
-    def loadMoreItems(self, excludeRead=False):
+    def loadMoreItems(self, excludeRead=False, continuation=None):
         """
         Load more items using the continuation parameters of previously loaded items.
         """
-        self.lastLoadOk = False
-        if not self.continuation:
+        self.lastLoadOk     = False
+        self.lastLoadLength = 0
+        if not continuation and not self.continuation:
             return
-        self._itemsLoadedDone(self._getContent(excludeRead, self.continuation))
+        self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation))
         
     def _itemsLoadedDone(self, data):
         """
@@ -75,6 +84,8 @@ class ItemsContainer(object):
         if data is None:
             return
         self.continuation = data.get('continuation', None)
+        self.lastUpdated  = data.get('updated', None)
+        self.lastLoadLength = len(data.get('items', []))
         self.googleReader.itemsToObjects(self, data.get('items', []))
         self.lastLoadOk = True
 
@@ -93,6 +104,12 @@ class ItemsContainer(object):
     def getItems(self):
         return self.items
         
+    def countItems(self, excludeRead=False):
+        if excludeRead:
+            sum([1 for item in self.items if item.isUnread()])
+        else:
+            return len(self.items)
+        
     def markItemRead(self, item, read):
         if read and item.isUnread():
             self.unread -= 1
@@ -108,7 +125,7 @@ class ItemsContainer(object):
         return result.upper() == 'OK'
         
     def countUnread(self):
-        self.unread = sum([1 for item in self.items if item.isUnread()])
+        self.unread = self.countItems(excludeRead=True)
 
 class Category(ItemsContainer):
     """
@@ -182,11 +199,11 @@ class BaseFeed(ItemsContainer):
         
         self.categories = []
         for category in categories:
-            self._addCategory(category)
+            self.addCategory(category)
         
         self.continuation = None
         
-    def _addCategory(self, category):
+    def addCategory(self, category):
         if not category in self.categories:
             self.categories.append(category)
             category._addFeed(self)
@@ -272,9 +289,10 @@ class Item(object):
         
         self.data   = item # save original data for accessing other fields
         self.id     = item['id']
-        self.title  = item['title']
+        self.title  = item.get('title', '(no title)')
         self.author = item.get('author', None)
         self.content = item.get('content', item.get('summary', {})).get('content', '')
+        self.origin  = { 'title': '', 'url': ''}
                 
         # check original url
         self.url    = None
@@ -292,7 +310,7 @@ class Item(object):
                 self.read = True
             elif category.endswith('/state/com.google/starred'):
                 self.starred = True
-            elif category.endswith('/state/com.google/broadcast'):
+            elif category in ('user/-/state/com.google/broadcast', 'user/%s/state/com.google/broadcast' % self.googleReader.userId):
                 self.shared = True
 
         self.canUnread = item.get('isReadStateLocked', 'false') != 'true'
@@ -300,10 +318,22 @@ class Item(object):
         # keep feed, can be used when item si fetched from a special feed then it's the original one
         try:
             f = item['origin']
-            self.feed = self.googleReader.getFeed(f['streamId'], None)
+            self.origin = {
+                'title': f.get('title', ''), 
+                'url': f.get('htmlUrl', ''), 
+            }
+            self.feed = self.googleReader.getFeed(f['streamId'])
+            if not self.feed:
+                raise
+            if not self.feed.title and 'title' in f:
+                self.feed.title = f['title']
         except:
             try:
-                self.feed = Feed(self, f['title'], f['streamId'], f.get('htmlUrl', None), 0, [])
+                self.feed = Feed(self, f.get('title', ''), f['streamId'], f.get('htmlUrl', None), 0, [])
+                try:
+                    self.googleReader._addFeed(self.feed)
+                except:
+                    pass
             except:
                 self.feed = None
 
@@ -410,6 +440,9 @@ class GoogleReader(object):
         self.feedsById = {}
         self.categoriesById = {}
         self.specialFeeds = {}
+        self.orphanFeeds = []
+        
+        self.userId = None
 
     def toJSON(self):
         """
@@ -447,6 +480,9 @@ class GoogleReader(object):
 
         self._clearLists()
         unreadById = {}
+        
+        if not self.userId:
+            self.getUserInfo()
 
         unreadJson = self.httpGet(GoogleReader.UNREAD_COUNT_URL, { 'output': 'json', })
         unreadCounts = json.loads(unreadJson, strict=False)['unreadcounts']
@@ -465,8 +501,30 @@ class GoogleReader(object):
                         category = Category(self, hCategory['label'], cId)
                         self._addCategory(category)
                     categories.append(self.categoriesById[cId])
-            feed = Feed(self, sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
+
+            try:
+                feed = self.getFeed(sub['id'])
+                if not feed:
+                    raise
+                if not feed.title:
+                    feed.title = sub['title']
+                for category in categories:
+                    feed.addCategory(category)
+                feed.unread = unreadById.get(sub['id'], 0)
+            except:
+                feed = Feed(self, sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
+            if not categories:
+                self.orphanFeeds.append(feed)
             self._addFeed(feed)
+
+        specialUnreads = [id for id in unreadById if id.find('user/%s/state/com.google/' % self.userId) != -1]
+        for type in self.specialFeeds:
+            feed = self.specialFeeds[type]
+            feed.unread = 0
+            for id in specialUnreads:
+                if id.endswith('/%s' % type):
+                    feed.unread = unreadById.get(id, 0)
+                    break
 
         return True
         
@@ -525,7 +583,9 @@ class GoogleReader(object):
         Returns a dictionary of user info that google stores.
         """
         userJson = self.httpGet(GoogleReader.USER_INFO_URL)
-        return json.loads(userJson, strict=False)
+        result = json.loads(userJson, strict=False)
+        self.userId = result['userId']
+        return result
 
     def getUserSignupDate(self):
         """
@@ -548,12 +608,14 @@ class GoogleReader(object):
         return self.auth.post(url, post_parameters)
 
     def _addFeed(self, feed):
-        self.feedsById[feed.id] = feed
-        self.feeds.append(feed)
+        if feed.id not in self.feedsById:
+            self.feedsById[feed.id] = feed
+            self.feeds.append(feed)
 
     def _addCategory (self, category):
-        self.categoriesById[category.id] = category
-        self.categories.append(category)
+        if category.id not in self.categoriesById:
+            self.categoriesById[category.id] = category
+            self.categories.append(category)
         
     def getFeed(self, id):
         return self.feedsById.get(id, None)
@@ -569,6 +631,7 @@ class GoogleReader(object):
         self.feeds = []
         self.categoriesById = {}
         self.categories = []
+        self.orphanFeeds = []
 
 class AuthenticationMethod(object):
     """
