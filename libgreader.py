@@ -38,6 +38,10 @@ except:
 reload(sys)
 sys.setdefaultencoding("utf-8")
 
+def urlquote(string):
+    """Encode a string to utf-8 and encode it for urllib"""
+    return urllib.quote(string.encode("utf-8"))
+
 class ItemsContainer(object):
     """
     A base class used for all classes aimed to have items (Categories and Feeds)
@@ -149,7 +153,7 @@ class Category(ItemsContainer):
         
         self.feeds  = []
         
-        self.fetchUrl = GoogleReader.CATEGORY_URL + urllib.quote(self.label)
+        self.fetchUrl = GoogleReader.CATEGORY_URL + urlquote(self.label)
         
     def _addFeed(self, feed):
         if not feed in self.feeds:
@@ -248,7 +252,7 @@ class SpecialFeed(BaseFeed):
         )
         self.type = type
         
-        self.fetchUrl = GoogleReader.CONTENT_BASE_URL + urllib.quote(self.id)
+        self.fetchUrl = GoogleReader.CONTENT_BASE_URL + urlquote(self.id)
 
 class Feed(BaseFeed):
     """
@@ -269,7 +273,7 @@ class Feed(BaseFeed):
         self.feedUrl = self.id.lstrip('feed/')
         self.siteUrl = siteUrl
     
-        self.fetchUrl = GoogleReader.FEED_URL + urllib.quote(self.id)
+        self.fetchUrl = GoogleReader.FEED_URL + urlquote(self.id)
         
 class Item(object):
     """
