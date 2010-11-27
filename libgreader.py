@@ -54,14 +54,14 @@ class ItemsContainer(object):
         self.lastUpdated    = None
         self.unread         = 0
         self.continuation   = None
-        
+
     def _getContent(self, excludeRead=False, continuation=None):
         """
         Get content from google reader with specified parameters.
         Must be overladed in inherited clases
         """
         return None
-        
+
     def loadItems(self, excludeRead=False):
         """
         Load items and call itemsLoadedDone to transform data in objects
@@ -70,7 +70,7 @@ class ItemsContainer(object):
         self.loadtLoadOk    = False
         self.lastLoadLength = 0
         self._itemsLoadedDone(self._getContent(excludeRead, None))
-        
+
     def loadMoreItems(self, excludeRead=False, continuation=None):
         """
         Load more items using the continuation parameters of previously loaded items.
@@ -80,7 +80,7 @@ class ItemsContainer(object):
         if not continuation and not self.continuation:
             return
         self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation))
-        
+
     def _itemsLoadedDone(self, data):
         """
         Called when all items are loaded
@@ -96,30 +96,30 @@ class ItemsContainer(object):
     def _addItem(self, item):
         self.items.append(item)
         self.itemsById[item.id] = item
-        
+
     def getItem(self, id):
         return self.itemsById[id]
-        
+
     def clearItems(self):
         self.items        = []
         self.itemsById    = {}
         self.continuation = None
-        
+
     def getItems(self):
         return self.items
-        
+
     def countItems(self, excludeRead=False):
         if excludeRead:
             sum([1 for item in self.items if item.isUnread()])
         else:
             return len(self.items)
-        
+
     def markItemRead(self, item, read):
         if read and item.isUnread():
             self.unread -= 1
         elif not read and item.isRead():
             self.unread += 1
-            
+
     def markAllRead(self):
         self.unread = 0
         for item in self.items:
@@ -127,7 +127,7 @@ class ItemsContainer(object):
             item.canUnread = False
         result = self.googleReader.markFeedAsRead(self)
         return result.upper() == 'OK'
-        
+
     def countUnread(self):
         self.unread = self.countItems(excludeRead=True)
 
@@ -135,10 +135,10 @@ class Category(ItemsContainer):
     """
     Class for representing a category
     """
-    
+
     def __str__(self):
         return "<%s (%d), %s>" % (self.label, self.unread, self.id)
-        
+
     def __init__(self, googleReader, label, id):
         """
         Key args:
@@ -147,14 +147,14 @@ class Category(ItemsContainer):
         """
         super(Category, self).__init__()
         self.googleReader = googleReader
-        
+
         self.label = label
         self.id    = id
-        
+
         self.feeds  = []
-        
+
         self.fetchUrl = GoogleReader.CATEGORY_URL + urlquote(self.label)
-        
+
     def _addFeed(self, feed):
         if not feed in self.feeds:
             self.feeds.append(feed)
@@ -162,13 +162,13 @@ class Category(ItemsContainer):
                 self.unread += feed.unread
             except:
                 pass
-            
+
     def getFeeds(self):
         return self.feeds
 
     def _getContent(self, excludeRead=False, continuation=None):
         return self.googleReader.getCategoryContent(self, excludeRead, continuation)
-        
+
     def countUnread(self):
         self.unread = sum([feed.unread for feed in self.feeds])
 
@@ -184,7 +184,7 @@ class BaseFeed(ItemsContainer):
     """
     def __str__(self):
         return "<%s, %s>" % (self.title, self.id)
-    
+
     def __init__(self, googleReader, title, id, unread, categories=[]):
         """
         Key args:
@@ -196,28 +196,28 @@ class BaseFeed(ItemsContainer):
         super(BaseFeed, self).__init__()
 
         self.googleReader = googleReader
-        
+
         self.id    = id
         self.title = title
         self.unread = unread
-        
+
         self.categories = []
         for category in categories:
             self.addCategory(category)
-        
+
         self.continuation = None
-        
+
     def addCategory(self, category):
         if not category in self.categories:
             self.categories.append(category)
             category._addFeed(self)
-            
+
     def getCategories(self):
         return self.categories
-        
+
     def _getContent(self, excludeRead=False, continuation=None):
         return self.googleReader.getFeedContent(self, excludeRead, continuation)
-        
+
     def markItemRead(self, item, read):
         super(BaseFeed, self).markItemRead(item, read)
         for category in self.categories:
@@ -247,11 +247,11 @@ class SpecialFeed(BaseFeed):
             googleReader,
             title      = type,
             id         = GoogleReader.SPECIAL_FEEDS_PART_URL+type,
-            unread     = 0, 
-            categories = [], 
+            unread     = 0,
+            categories = [],
         )
         self.type = type
-        
+
         self.fetchUrl = GoogleReader.CONTENT_BASE_URL + urlquote(self.id)
 
 class Feed(BaseFeed):
@@ -269,12 +269,12 @@ class Feed(BaseFeed):
           - categories (list) - list of all categories a feed belongs to, can be empty
         """
         super(Feed, self).__init__(googleReader, title, id, unread, categories)
-        
+
         self.feedUrl = self.id.lstrip('feed/')
         self.siteUrl = siteUrl
-    
+
         self.fetchUrl = GoogleReader.FEED_URL + urlquote(self.id)
-        
+
 class Item(object):
     """
     Class for representing an individual item (an entry of a feed)
@@ -282,7 +282,7 @@ class Item(object):
 
     def __str__(self):
         return '<"%s" by %s, %s>' % (self.title, self.author, self.id)
-    
+
     def __init__(self, googleReader, item, parent):
         """
         item : An item loaded from json
@@ -290,21 +290,21 @@ class Item(object):
         """
         self.googleReader = googleReader
         self.parent = parent
-        
+
         self.data   = item # save original data for accessing other fields
         self.id     = item['id']
         self.title  = item.get('title', '(no title)')
         self.author = item.get('author', None)
         self.content = item.get('content', item.get('summary', {})).get('content', '')
         self.origin  = { 'title': '', 'url': ''}
-                
+
         # check original url
         self.url    = None
         for alternate in item.get('alternate', []):
             if alternate.get('type', '') == 'text/html':
                 self.url = alternate['href']
                 break
-                
+
         # check status
         self.read    = False
         self.starred = False
@@ -323,8 +323,8 @@ class Item(object):
         try:
             f = item['origin']
             self.origin = {
-                'title': f.get('title', ''), 
-                'url': f.get('htmlUrl', ''), 
+                'title': f.get('title', ''),
+                'url': f.get('htmlUrl', ''),
             }
             self.feed = self.googleReader.getFeed(f['streamId'])
             if not self.feed:
@@ -342,13 +342,13 @@ class Item(object):
                 self.feed = None
 
         self.parent._addItem(self)
-        
+
     def isUnread(self):
         return not self.read
-        
+
     def isRead(self):
         return self.read
-        
+
     def markRead(self, read=True):
         self.parent.markItemRead(self, read)
         self.read = read
@@ -357,13 +357,13 @@ class Item(object):
         else:
             result = self.googleReader.removeItemTag(self, GoogleReader.TAG_READ)
         return result.upper() == 'OK'
-            
+
     def markUnread(self, unread=True):
         return self.markRead(not unread)
-        
+
     def isShared(self):
         return self.shared
-        
+
     def markShared(self, shared=True):
         self.shared = shared
         if shared:
@@ -371,16 +371,16 @@ class Item(object):
         else:
             result = self.googleReader.removeItemTag(self, GoogleReader.TAG_SHARED)
         return result.upper() == 'OK'
-            
+
     def share(self):
         return self.markShared()
 
     def unShare(self):
         return self.markShared(False)
-        
+
     def isStarred(self):
         return self.starred
-        
+
     def markStarred(self, starred=True):
         self.starred = starred
         if starred:
@@ -388,10 +388,10 @@ class Item(object):
         else:
             result = self.googleReader.removeItemTag(self, GoogleReader.TAG_STARRED)
         return result.upper() == 'OK'
-            
+
     def star(self):
         return self.markStarred()
-        
+
     def unStar(self):
         return self.markStarred(False)
 
@@ -406,10 +406,10 @@ class GoogleReader(object):
     API_URL = READER_BASE_URL + '/0/'
 
     USER_INFO_URL = API_URL + 'user-info'
-    
+
     SUBSCRIPTION_LIST_URL = API_URL + 'subscription/list'
     UNREAD_COUNT_URL = API_URL + 'unread-count'
-    
+
     CONTENT_PART_URL       = 'stream/contents/'
     CONTENT_BASE_URL       = API_URL + CONTENT_PART_URL
     SPECIAL_FEEDS_PART_URL = 'user/-/state/com.google/'
@@ -423,15 +423,15 @@ class GoogleReader(object):
     FRIENDS_LIST    = 'broadcast-friends'
     SPECIAL_FEEDS = (READING_LIST, READ_LIST, KEPTUNREAD_LIST, STARRED_LIST, \
                      SHARED_LIST, FRIENDS_LIST, NOTES_LIST, )
-    
+
     FEED_URL     = CONTENT_BASE_URL
     CATEGORY_URL = CONTENT_BASE_URL + 'user/-/label/'
-    
+
     EDIT_TAG_URL = API_URL + 'edit-tag'
     TAG_READ     = 'user/-/state/com.google/read'
     TAG_STARRED  = 'user/-/state/com.google/starred'
     TAG_SHARED   = 'user/-/state/com.google/broadcast'
-    
+
     MARK_ALL_READ_URL = API_URL + 'mark-all-as-read'
 
     def __str__(self):
@@ -445,7 +445,7 @@ class GoogleReader(object):
         self.categoriesById = {}
         self.specialFeeds = {}
         self.orphanFeeds = []
-        
+
         self.userId = None
 
     def toJSON(self):
@@ -467,11 +467,11 @@ class GoogleReader(object):
         has not been called, to get the Feeds
         """
         return self.categories
-        
+
     def makeSpecialFeeds(self):
         for type in self.SPECIAL_FEEDS:
             self.specialFeeds[type] = SpecialFeed(self, type)
-            
+
     def getSpecialFeed(self, type):
         return self.specialFeeds[type]
 
@@ -484,7 +484,7 @@ class GoogleReader(object):
 
         self._clearLists()
         unreadById = {}
-        
+
         if not self.userId:
             self.getUserInfo()
 
@@ -492,7 +492,7 @@ class GoogleReader(object):
         unreadCounts = json.loads(unreadJson, strict=False)['unreadcounts']
         for unread in unreadCounts:
             unreadById[unread['id']] = unread['count']
-        
+
         feedsJson = self.httpGet(GoogleReader.SUBSCRIPTION_LIST_URL, { 'output': 'json', })
         subscriptions = json.loads(feedsJson, strict=False)['subscriptions']
 
@@ -531,12 +531,12 @@ class GoogleReader(object):
                     break
 
         return True
-        
+
     def _getFeedContent(self, url, excludeRead=False, continuation=None):
         """
         A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
-        Returns a dict with 
+        Returns a dict with
           - id (str, feed's id)
           - continuation (str, to be used to fetch more items)
           - items, array of dits with :
@@ -554,31 +554,31 @@ class GoogleReader(object):
             parameters['c'] = continuation
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
-        
+
     def itemsToObjects(self, parent, items):
         objects = []
         for item in items:
             objects.append(Item(self, item, parent))
         return objects
-        
+
     def getFeedContent(self, feed, excludeRead=False, continuation=None):
         """
         Return items for a particular feed
         """
         return self._getFeedContent(feed.fetchUrl, excludeRead, continuation)
-        
+
     def getCategoryContent(self, category, excludeRead=False, continuation=None):
         """
         Return items for a particular category
         """
         return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
-        
+
     def removeItemTag(self, item, tag):
         return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
-            
+
     def addItemTag(self, item, tag):
         return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
-        
+
     def markFeedAsRead(self, feed):
         return self.httpPost(GoogleReader.MARK_ALL_READ_URL, {'s': feed.id, })
 
@@ -620,10 +620,10 @@ class GoogleReader(object):
         if category.id not in self.categoriesById:
             self.categoriesById[category.id] = category
             self.categories.append(category)
-        
+
     def getFeed(self, id):
         return self.feedsById.get(id, None)
-        
+
     def getCategory(self, id):
         return self.categoriesById.get(id, None)
 
@@ -644,6 +644,8 @@ class AuthenticationMethod(object):
     1. auth on setup
     2. need to have GET method
     """
+    def __init__(self):
+        self.client = "libgreader" #@todo: is this needed?
 
     def getParameters(self, extraargs=None):
         #ck is a timecode to help google with caching
@@ -651,7 +653,7 @@ class AuthenticationMethod(object):
         if extraargs:
             parameters.update(extraargs)
         return urllib.urlencode(parameters)
-        
+
     def postParameters(self, post=None):
         if post is not None:
             post_string = urllib.urlencode(post)
@@ -666,12 +668,12 @@ class ClientAuth(AuthenticationMethod):
     CLIENT_URL = 'https://www.google.com/accounts/ClientLogin'
 
     def __init__(self, username, password):
-        self.client = "libgreader" #@todo: is this needed?
+        super(ClientAuth, self).__init__()
         self.username = username
         self.password = password
         self.auth_token = self._getAuth()
         self.token = self._getToken()
-        
+
     def postParameters(self, post=None):
         post.update({'T': self.token})
         return super(ClientAuth, self).postParameters(post)
@@ -687,7 +689,7 @@ class ClientAuth(AuthenticationMethod):
         data = r.read()
         r.close()
         return data
-        
+
     def post(self, url, postParameters=None, urlParameters=None):
         if urlParameters:
             getString = self.getParameters(urlParameters)
@@ -754,6 +756,7 @@ class OAuthMethod(AuthenticationMethod):
     def __init__(self, consumer_key, consumer_secret):
         if not has_oauth:
             raise ImportError("No module named oauth2")
+        super(OAuthMethod, self).__init__()
         self.oauth_key = consumer_key
         self.oauth_secret = consumer_secret
         self.consumer = oauth.Consumer(self.oauth_key, self.oauth_secret)
@@ -821,8 +824,8 @@ class OAuthMethod(AuthenticationMethod):
     def get(self, url, parameters=None):
         if self.authorized_client:
             getString = self.getParameters(parameters)
-            req = urllib2.Request(url + "?" + getString)
-            resp,content = self.authorized_client.request(req)
+            #can't pass in urllib2 Request object here?
+            resp, content = self.authorized_client.request(url + "?" + getString)
             return content
         else:
             raise IOError("No authorized client available.")
