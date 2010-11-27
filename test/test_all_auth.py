@@ -7,9 +7,7 @@ Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 
-Unit tests for libgreader. Just call this file to run!
-
-Requires mechanize for automated oauth authenication.
+Unit tests for oauth and ClientAuth in libgreader. Requires mechanize for automated oauth authenication.
 
 """
 
