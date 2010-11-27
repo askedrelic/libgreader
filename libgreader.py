@@ -286,7 +286,7 @@ class Item(object):
     def __init__(self, googleReader, item, parent):
         """
         item : An item loaded from json
-        parent : the object (Feed of Category) containing thi Item
+        parent : the object (Feed of Category) containing the Item
         """
         self.googleReader = googleReader
         self.parent = parent
@@ -314,12 +314,13 @@ class Item(object):
                 self.read = True
             elif category.endswith('/state/com.google/starred'):
                 self.starred = True
-            elif category in ('user/-/state/com.google/broadcast', 'user/%s/state/com.google/broadcast' % self.googleReader.userId):
+            elif category in ('user/-/state/com.google/broadcast',
+                              'user/%s/state/com.google/broadcast' % self.googleReader.userId):
                 self.shared = True
 
         self.canUnread = item.get('isReadStateLocked', 'false') != 'true'
 
-        # keep feed, can be used when item si fetched from a special feed then it's the original one
+        # keep feed, can be used when item is fetched from a special feed, then it's the original one
         try:
             f = item['origin']
             self.origin = {
@@ -516,12 +517,18 @@ class GoogleReader(object):
                     feed.addCategory(category)
                 feed.unread = unreadById.get(sub['id'], 0)
             except:
-                feed = Feed(self, sub['title'], sub['id'], sub.get('htmlUrl', None), unreadById.get(sub['id'], 0), categories)
+                feed = Feed(self,
+                            sub['title'],
+                            sub['id'],
+                            sub.get('htmlUrl', None),
+                            unreadById.get(sub['id'], 0),
+                            categories)
             if not categories:
                 self.orphanFeeds.append(feed)
             self._addFeed(feed)
 
-        specialUnreads = [id for id in unreadById if id.find('user/%s/state/com.google/' % self.userId) != -1]
+        specialUnreads = [id for id in unreadById
+                            if id.find('user/%s/state/com.google/' % self.userId) != -1]
         for type in self.specialFeeds:
             feed = self.specialFeeds[type]
             feed.unread = 0
@@ -574,10 +581,12 @@ class GoogleReader(object):
         return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
 
     def removeItemTag(self, item, tag):
-        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
+        return self.httpPost(GoogleReader.EDIT_TAG_URL,
+                             {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
 
     def addItemTag(self, item, tag):
-        return self.httpPost(GoogleReader.EDIT_TAG_URL, {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+        return self.httpPost(GoogleReader.EDIT_TAG_URL,
+                             {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
 
     def markFeedAsRead(self, feed):
         return self.httpPost(GoogleReader.MARK_ALL_READ_URL, {'s': feed.id, })
