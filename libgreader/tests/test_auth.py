@@ -13,7 +13,7 @@ Unit tests for oauth and ClientAuth in libgreader. Requires mechanize for automa
 
 import unittest
 
-from libgreader import GoogleReader, OAuthMethod, ClientAuth, Feed
+from .. import GoogleReader, OAuthMethod, ClientAuth, Feed
 import urllib
 import urllib2
 import urlparse
