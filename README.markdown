@@ -86,34 +86,7 @@ So assume the user goes, authenticates you, and now they are returning to http:/
 ##Etc
 
 Todo:
-
 * Add most url endpoints?. Get a generic "getThisUrl" method
-* Add to PyPi
 * CLI script using the library?
-* Move to setup/distribute package 
-* More tests
-
-History:
-
-* v0.4 -- 2010/08/10
-	Lot of improvements : 
-	* Manage special feeds (reading-list, shared, starred, friends...)
-	* Manage categories (get all items, mark as read)
-	* Manage feeds (get items, unread couts, mark as read, "fetch more")
-	* Manage items (get and mark read, star, share)
-	* and:
-		* oauth2 not required if you don't use it
-		* replacing all xml calls by json ones
-* v0.3 -- 2010/03/07
-    * All requests to Google use HTTPS
-    * CLeaned up formatting, should mostly meet PEP8
-    * Fixed random unicode issues
-    * Added licensing
-
-* v0.2 -- 2009/10/27
-	* Moved all get requests to private convenience method
-	* Added a few more basic data calls
-
-* v0.1 -- 2009/10/27
-	* Connects to GR and receives auth token correctly.
-	* Pulls down subscription list.
+* More functional tests
+* Better usage guide, more docs
