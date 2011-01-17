@@ -13,7 +13,7 @@ Unit tests for feeds. Requires mechanize for automated oauth authenication.
 
 import unittest
 
-from libgreader import GoogleReader, OAuthMethod, ClientAuth, Feed
+from libgreader import GoogleReader, OAuthMethod, ClientAuth, Feed, ItemsContainer, BaseFeed, SpecialFeed
 import urllib
 import urllib2
 import urlparse
@@ -36,6 +36,16 @@ class TestSpecialFeeds(unittest.TestCase):
 
         list_match = re.search('reading list in Google Reader', feeds['title'])
         self.assertTrue(list_match)
+
+    def test_marking_read(self):
+        ca = ClientAuth(username,password)
+        reader = GoogleReader(ca)
+        container = SpecialFeed(reader, reader.READING_LIST)
+        container.loadItems()
+
+        feed_item = container.items[0]
+        self.assertTrue(feed_item.markRead())
+        self.assertTrue(feed_item.isRead())
 
 if __name__ == '__main__':
     unittest.main()
