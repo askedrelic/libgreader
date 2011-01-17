@@ -34,13 +34,15 @@ try:
 except:
     has_oauth = False
 
-#Reset due to ascii/utf-8 problems with internet data
-reload(sys)
-sys.setdefaultencoding("utf-8")
-
 def urlquote(string):
     """Encode a string to utf-8 and encode it for urllib"""
     return urllib.quote(string.encode("utf-8"))
+
+def toUnicode(obj, encoding='utf-8'):
+    if isinstance(obj, basestring):
+        if not isinstance(obj, unicode):
+            obj = unicode(obj, encoding)
+    return obj
 
 class ItemsContainer(object):
     """
@@ -612,7 +614,7 @@ class GoogleReader(object):
         """
         Wrapper around AuthenticationMethod get()
         """
-        return self.auth.get(url, parameters)
+        return toUnicode(self.auth.get(url, parameters))
 
     def httpPost(self, url, post_parameters=None):
         """
