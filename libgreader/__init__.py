@@ -411,6 +411,7 @@ class GoogleReader(object):
     USER_INFO_URL = API_URL + 'user-info'
 
     SUBSCRIPTION_LIST_URL = API_URL + 'subscription/list'
+    SUBSCRIPTION_EDIT_URL = API_URL + 'subscription/edit'
     UNREAD_COUNT_URL = API_URL + 'unread-count'
 
     CONTENT_PART_URL       = 'stream/contents/'
@@ -592,6 +593,12 @@ class GoogleReader(object):
 
     def markFeedAsRead(self, feed):
         return self.httpPost(GoogleReader.MARK_ALL_READ_URL, {'s': feed.id, })
+
+    def subscribe(self, feedUrl):
+    	"""
+    	Adds a feed to the top-level subscription list
+    	"""
+        return self.httpPost(GoogleReader.SUBSCRIPTION_EDIT_URL, {'ac':'subscribe', 's': feedUrl})
 
     def getUserInfo(self):
         """
