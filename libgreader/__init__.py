@@ -89,8 +89,8 @@ class ItemsContainer(object):
         """
         if data is None:
             return
-        self.continuation = data.get('continuation', None)
-        self.lastUpdated  = data.get('updated', None)
+        self.continuation   = data.get('continuation', None)
+        self.lastUpdated    = data.get('updated', None)
         self.lastLoadLength = len(data.get('items', []))
         self.googleReader.itemsToObjects(self, data.get('items', []))
         self.lastLoadOk = True
@@ -405,52 +405,52 @@ class GoogleReader(object):
 
     Requires valid google username and password.
     """
-    READER_BASE_URL = 'https://www.google.com/reader/api'
-    API_URL = READER_BASE_URL + '/0/'
+    READER_BASE_URL        = 'https://www.google.com/reader/api'
+    API_URL                = READER_BASE_URL + '/0/'
 
-    USER_INFO_URL = API_URL + 'user-info'
+    USER_INFO_URL          = API_URL + 'user-info'
 
-    SUBSCRIPTION_LIST_URL = API_URL + 'subscription/list'
-    SUBSCRIPTION_EDIT_URL = API_URL + 'subscription/edit'
-    UNREAD_COUNT_URL = API_URL + 'unread-count'
+    SUBSCRIPTION_LIST_URL  = API_URL + 'subscription/list'
+    SUBSCRIPTION_EDIT_URL  = API_URL + 'subscription/edit'
+    UNREAD_COUNT_URL       = API_URL + 'unread-count'
 
     CONTENT_PART_URL       = 'stream/contents/'
     CONTENT_BASE_URL       = API_URL + CONTENT_PART_URL
     SPECIAL_FEEDS_PART_URL = 'user/-/state/com.google/'
 
-    READING_LIST    = 'reading-list'
-    READ_LIST       = 'read'
-    KEPTUNREAD_LIST = 'kept-unread'
-    STARRED_LIST    = 'starred'
-    SHARED_LIST     = 'broadcast'
-    NOTES_LIST      = 'created'
-    FRIENDS_LIST    = 'broadcast-friends'
-    SPECIAL_FEEDS = (READING_LIST, READ_LIST, KEPTUNREAD_LIST, STARRED_LIST, \
-                     SHARED_LIST, FRIENDS_LIST, NOTES_LIST, )
+    READING_LIST           = 'reading-list'
+    READ_LIST              = 'read'
+    KEPTUNREAD_LIST        = 'kept-unread'
+    STARRED_LIST           = 'starred'
+    SHARED_LIST            = 'broadcast'
+    NOTES_LIST             = 'created'
+    FRIENDS_LIST           = 'broadcast-friends'
+    SPECIAL_FEEDS          = (READING_LIST, READ_LIST, KEPTUNREAD_LIST,
+                              STARRED_LIST, SHARED_LIST, FRIENDS_LIST,
+                              NOTES_LIST,)
 
-    FEED_URL     = CONTENT_BASE_URL
-    CATEGORY_URL = CONTENT_BASE_URL + 'user/-/label/'
+    FEED_URL               = CONTENT_BASE_URL
+    CATEGORY_URL           = CONTENT_BASE_URL + 'user/-/label/'
 
-    EDIT_TAG_URL = API_URL + 'edit-tag'
-    TAG_READ     = 'user/-/state/com.google/read'
-    TAG_STARRED  = 'user/-/state/com.google/starred'
-    TAG_SHARED   = 'user/-/state/com.google/broadcast'
+    EDIT_TAG_URL           = API_URL + 'edit-tag'
+    TAG_READ               = 'user/-/state/com.google/read'
+    TAG_STARRED            = 'user/-/state/com.google/starred'
+    TAG_SHARED             = 'user/-/state/com.google/broadcast'
 
-    MARK_ALL_READ_URL = API_URL + 'mark-all-as-read'
+    MARK_ALL_READ_URL      = API_URL + 'mark-all-as-read'
 
     def __str__(self):
         return "<Google Reader object: %s>" % self.username
 
     def __init__(self, auth):
-        self.auth = auth
-        self.feeds = []
-        self.categories = []
-        self.feedsById = {}
+        self.auth           = auth
+        self.feeds          = []
+        self.categories     = []
+        self.feedsById      = {}
         self.categoriesById = {}
-        self.specialFeeds = {}
-        self.orphanFeeds = []
-
-        self.userId = None
+        self.specialFeeds   = {}
+        self.orphanFeeds    = []
+        self.userId         = None
 
     def toJSON(self):
         """
@@ -588,17 +588,22 @@ class GoogleReader(object):
                              {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
 
     def addItemTag(self, item, tag):
-        return self.httpPost(GoogleReader.EDIT_TAG_URL,
-                             {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+        return self.httpPost(
+            GoogleReader.EDIT_TAG_URL,
+            {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
 
     def markFeedAsRead(self, feed):
-        return self.httpPost(GoogleReader.MARK_ALL_READ_URL, {'s': feed.id, })
+        return self.httpPost(
+            GoogleReader.MARK_ALL_READ_URL,
+            {'s': feed.id, })
 
     def subscribe(self, feedUrl):
-    	"""
-    	Adds a feed to the top-level subscription list
-    	"""
-        return self.httpPost(GoogleReader.SUBSCRIPTION_EDIT_URL, {'ac':'subscribe', 's': feedUrl})
+        """
+        Adds a feed to the top-level subscription list
+        """
+        return self.httpPost(
+            GoogleReader.SUBSCRIPTION_EDIT_URL,
+            {'ac':'subscribe', 's': feedUrl})
 
     def getUserInfo(self):
         """
@@ -649,11 +654,11 @@ class GoogleReader(object):
         """
         Clear all list before sync : feeds and categories
         """
-        self.feedsById = {}
-        self.feeds = []
+        self.feedsById      = {}
+        self.feeds          = []
         self.categoriesById = {}
-        self.categories = []
-        self.orphanFeeds = []
+        self.categories     = []
+        self.orphanFeeds    = []
 
 class AuthenticationMethod(object):
     """
@@ -687,10 +692,10 @@ class ClientAuth(AuthenticationMethod):
 
     def __init__(self, username, password):
         super(ClientAuth, self).__init__()
-        self.username = username
-        self.password = password
+        self.username   = username
+        self.password   = password
         self.auth_token = self._getAuth()
-        self.token = self._getToken()
+        self.token      = self._getToken()
 
     def postParameters(self, post=None):
         post.update({'T': self.token})
@@ -729,10 +734,10 @@ class ClientAuth(AuthenticationMethod):
         Returns Auth token or raises IOError on error.
         """
         parameters = urllib.urlencode({
-            'service':'reader',
-            'Email':self.username,
-            'Passwd':self.password,
-            'accountType':'GOOGLE'})
+            'service'     : 'reader',
+            'Email'       : self.username,
+            'Passwd'      : self.password,
+            'accountType' : 'GOOGLE'})
         try:
             conn = urllib2.urlopen(ClientAuth.CLIENT_URL,parameters)
             data = conn.read()
@@ -765,23 +770,23 @@ class OAuthMethod(AuthenticationMethod):
     """
     Loose wrapper around OAuth2 lib. Kinda awkward.
     """
-    GOOGLE_URL = 'https://www.google.com/accounts/'
-    REQUEST_TOKEN_URL = (GOOGLE_URL + 'OAuthGetRequestToken?scope=%s'
-            % GoogleReader.READER_BASE_URL)
-    AUTHORIZE_URL = GOOGLE_URL + 'OAuthAuthorizeToken'
-    ACCESS_TOKEN_URL = GOOGLE_URL + 'OAuthGetAccessToken'
+    GOOGLE_URL        = 'https://www.google.com/accounts/'
+    REQUEST_TOKEN_URL = (GOOGLE_URL + 'OAuthGetRequestToken?scope=%s' %
+                         GoogleReader.READER_BASE_URL)
+    AUTHORIZE_URL     = GOOGLE_URL + 'OAuthAuthorizeToken'
+    ACCESS_TOKEN_URL  = GOOGLE_URL + 'OAuthGetAccessToken'
 
     def __init__(self, consumer_key, consumer_secret):
         if not has_oauth:
             raise ImportError("No module named oauth2")
         super(OAuthMethod, self).__init__()
-        self.oauth_key = consumer_key
-        self.oauth_secret = consumer_secret
-        self.consumer = oauth.Consumer(self.oauth_key, self.oauth_secret)
+        self.oauth_key         = consumer_key
+        self.oauth_secret      = consumer_secret
+        self.consumer          = oauth.Consumer(self.oauth_key, self.oauth_secret)
         self.authorized_client = None
-        self.token_key = None
-        self.token_secret = None
-        self.callback = None
+        self.token_key         = None
+        self.token_secret      = None
+        self.callback          = None
 
     def setCallback(self, callback_url):
         self.callback = '&oauth_callback=%s' % callback_url
@@ -791,11 +796,14 @@ class OAuthMethod(AuthenticationMethod):
         # having the user authorize an access token and to sign the request to obtain
         # said access token.
         client = oauth.Client(self.consumer)
+        print OAuthMethod.REQUEST_TOKEN_URL
         if not self.callback:
             resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL)
         else:
             resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL + self.callback)
         if int(resp['status']) != 200:
+            print resp
+            print content
             raise IOError("Error setting Request Token")
         token_dict = dict(urlparse.parse_qsl(content))
         self.token_key = token_dict['oauth_token']
@@ -831,9 +839,9 @@ class OAuthMethod(AuthenticationMethod):
                                  access_token['oauth_token_secret'])
 
     def authFromAccessToken(self, oauth_token, oauth_token_secret):
-        self.token_key = oauth_token
-        self.token_key_secret = oauth_token_secret
-        token = oauth.Token(oauth_token,oauth_token_secret)
+        self.token_key         = oauth_token
+        self.token_key_secret  = oauth_token_secret
+        token                  = oauth.Token(oauth_token,oauth_token_secret)
         self.authorized_client = oauth.Client(self.consumer, token)
 
     def getAccessToken(self):
