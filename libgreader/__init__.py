@@ -796,14 +796,11 @@ class OAuthMethod(AuthenticationMethod):
         # having the user authorize an access token and to sign the request to obtain
         # said access token.
         client = oauth.Client(self.consumer)
-        print OAuthMethod.REQUEST_TOKEN_URL
         if not self.callback:
             resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL)
         else:
             resp, content = client.request(OAuthMethod.REQUEST_TOKEN_URL + self.callback)
         if int(resp['status']) != 200:
-            print resp
-            print content
             raise IOError("Error setting Request Token")
         token_dict = dict(urlparse.parse_qsl(content))
         self.token_key = token_dict['oauth_token']
