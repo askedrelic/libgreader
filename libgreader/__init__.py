@@ -626,7 +626,7 @@ class GoogleReader(object):
         """
         Wrapper around AuthenticationMethod get()
         """
-        return toUnicode(self.auth.get(url, parameters))
+        return self.auth.get(url, parameters)
 
     def httpPost(self, url, post_parameters=None):
         """
@@ -711,7 +711,7 @@ class ClientAuth(AuthenticationMethod):
         r = urllib2.urlopen(req)
         data = r.read()
         r.close()
-        return data
+        return toUnicode(data)
 
     def post(self, url, postParameters=None, urlParameters=None):
         if urlParameters:
@@ -724,7 +724,7 @@ class ClientAuth(AuthenticationMethod):
         r = urllib2.urlopen(req, data=postString)
         data = r.read()
         r.close()
-        return data
+        return toUnicode(data)
 
     def _getAuth(self):
         """
@@ -849,7 +849,7 @@ class OAuthMethod(AuthenticationMethod):
             getString = self.getParameters(parameters)
             #can't pass in urllib2 Request object here?
             resp, content = self.authorized_client.request(url + "?" + getString)
-            return content
+            return toUnicode(content)
         else:
             raise IOError("No authorized client available.")
 
@@ -862,6 +862,6 @@ class OAuthMethod(AuthenticationMethod):
                 req = urllib2.Request(url)
             postString = self.postParameters(postParameters)
             resp,content = self.authorized_client.request(req, method="POST", body=postString)
-            return content
+            return toUnicode(content)
         else:
             raise IOError("No authorized client available.")
