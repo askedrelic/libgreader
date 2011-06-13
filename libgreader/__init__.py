@@ -137,8 +137,10 @@ class Category(ItemsContainer):
     """
     Class for representing a category
     """
-
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return "<%s (%d), %s>" % (self.label, self.unread, self.id)
 
     def __init__(self, googleReader, label, id):
@@ -185,6 +187,9 @@ class BaseFeed(ItemsContainer):
     Class for representing a special feed.
     """
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return "<%s, %s>" % (self.title, self.id)
 
     def __init__(self, googleReader, title, id, unread, categories=[]):
@@ -281,8 +286,10 @@ class Item(object):
     """
     Class for representing an individual item (an entry of a feed)
     """
-
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return '<"%s" by %s, %s>' % (self.title, self.author, self.id)
 
     def __init__(self, googleReader, item, parent):
@@ -440,6 +447,9 @@ class GoogleReader(object):
     MARK_ALL_READ_URL      = API_URL + 'mark-all-as-read'
 
     def __str__(self):
+        return unicode(self).encode('utf-8')
+
+    def __unicode__(self):
         return "<Google Reader object: %s>" % self.username
 
     def __init__(self, auth):
