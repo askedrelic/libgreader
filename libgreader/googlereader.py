@@ -41,6 +41,12 @@ class GoogleReader(object):
 
     def getFeeds(self):
         """
+        @Deprecated, see getSubscriptionList
+        """
+        return self.feeds
+
+    def getSubscriptionList(self):
+        """
         Returns a list of Feed objects containing all of a users subscriptions
         or None if buildSubscriptionList has not been called, to get the Feeds
         """
@@ -66,7 +72,6 @@ class GoogleReader(object):
 
         Returns true if succesful.
         """
-
         self._clearLists()
         unreadById = {}
 
@@ -128,9 +133,9 @@ class GoogleReader(object):
         A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
         Returns a dict with
-          - id (str, feed's id)
-          - continuation (str, to be used to fetch more items)
-          - items, array of dits with :
+         :param id: (str, feed's id)
+         :param continuation: (str, to be used to fetch more items)
+         :param items:  array of dits with :
             - update (update timestamp)
             - author (str, username)
             - title (str, page title)

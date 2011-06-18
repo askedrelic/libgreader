@@ -105,9 +105,8 @@ class Category(ItemsContainer):
 
     def __init__(self, googleReader, label, id):
         """
-        Key args:
-          - label (str)
-          - id (str)
+         :param label: (str)
+         :param id: (str)
         """
         super(Category, self).__init__()
         self.googleReader = googleReader
@@ -159,11 +158,10 @@ class BaseFeed(ItemsContainer):
 
     def __init__(self, googleReader, title, id, unread, categories=[]):
         """
-        Key args:
-          - title (str, name of the feed)
-          - id (str, id for google reader)
-          - unread (int, number of unread items, 0 by default)
-          - categories (list) - list of all categories a feed belongs to, can be empty
+         :param title: (str, name of the feed)
+         :param id: (str, id for google reader)
+         :param unread: (int, number of unread items, 0 by default)
+         :param categories: (list) - list of all categories a feed belongs to, can be empty
         """
         super(BaseFeed, self).__init__()
 
@@ -233,12 +231,11 @@ class Feed(BaseFeed):
 
     def __init__(self, googleReader, title, id, siteUrl=None, unread=0, categories=[]):
         """
-        Key args:
-          - title (str, name of the feed)
-          - id (str, id for google reader)
-          - siteUrl (str, can be empty)
-          - unread (int, number of unread items, 0 by default)
-          - categories (list) - list of all categories a feed belongs to, can be empty
+        :param title: str name of the feed
+        :param id: str, id for google reader
+        :param siteUrl: str, can be empty
+        :param unread: int, number of unread items, 0 by default
+        :param categories: (list) - list of all categories a feed belongs to, can be empty
         """
         super(Feed, self).__init__(googleReader, title, id, unread, categories)
 
@@ -259,8 +256,8 @@ class Item(object):
 
     def __init__(self, googleReader, item, parent):
         """
-        item : An item loaded from json
-        parent : the object (Feed of Category) containing the Item
+        :param item: An item loaded from json
+        :param parent: the object (Feed of Category) containing the Item
         """
         self.googleReader = googleReader
         self.parent = parent
