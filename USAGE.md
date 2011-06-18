@@ -19,9 +19,6 @@ Then setup GoogleReader:
 Then make whatever requests you want:
 
 	print reader.getUserInfo()
-	reader.makeSpecialFeeds()
-	feed = reader.getSpecialFeed(reader.READING_LIST)
-	print feed.getItems()
 	
 ###OAuth
 The OAuth method is a bit more complicated, depending on whether you want to use a callback or not, and because oauth is just complicated.
