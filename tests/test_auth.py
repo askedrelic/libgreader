@@ -7,19 +7,19 @@ Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 
-Unit tests for oauth and ClientAuth in libgreader. Requires mechanize for automated oauth authenication.
+Unit tests for oauth and ClientAuthMethod in libgreader. Requires mechanize for automated oauth authenication.
 
 """
 
 import unittest
 
-from .. import GoogleReader, OAuthMethod, ClientAuth, Feed
+from libgreader import GoogleReader, OAuthMethod, ClientAuthMethod, Feed
 import urllib
 import urllib2
 import urlparse
 import mechanize
 
-#ClientAuth
+#ClientAuthMethod
 #User account I created for testing
 username = 'relic@asktherelic.com'
 password = 'testtest'
@@ -49,21 +49,21 @@ def automated_oauth_approval(url):
     response2 = br.submit()
     return response2
 
-class TestClientAuth(unittest.TestCase):
-    def test_clientauth_login(self):
-        ca = ClientAuth(username,password)
+class TestClientAuthMethod(unittest.TestCase):
+    def test_ClientAuthMethod_login(self):
+        ca = ClientAuthMethod(username,password)
         self.assertNotEqual(ca, None)
 
     def test_reader(self):
-        ca = ClientAuth(username,password)
+        ca = ClientAuthMethod(username,password)
         reader = GoogleReader(ca)
         self.assertNotEqual(reader, None)
 
     def test_bad_user_details(self):
-        self.assertRaises(IOError, ClientAuth, 'asdsa', '')
+        self.assertRaises(IOError, ClientAuthMethod, 'asdsa', '')
 
     def test_reader_user_info(self):
-        ca = ClientAuth(username,password)
+        ca = ClientAuthMethod(username,password)
         reader = GoogleReader(ca)
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
