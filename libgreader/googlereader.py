@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 
+import time
+
 try:
     import json
 except:
     import simplejson as json
 
 from url import ReaderUrl
-from items import SpecialFeed, Item, Category
+from items import SpecialFeed, Item, Category, Feed
 
 class GoogleReader(object):
     """
@@ -15,13 +17,14 @@ class GoogleReader(object):
 
     Requires valid google username and password.
     """
-
+    def __repr__(self):
+        return "<Google Reader object: %s>" % self.auth.username
 
     def __str__(self):
         return unicode(self).encode('utf-8')
 
     def __unicode__(self):
-        return "<Google Reader object: %s>" % self.username
+        return "<Google Reader object: %s>" % self.auth.username
 
     def __init__(self, auth):
         self.auth           = auth
