@@ -245,7 +245,7 @@ class Feed(BaseFeed):
         self.feedUrl = self.id.lstrip('feed/')
         self.siteUrl = siteUrl
 
-        self.fetchUrl = ReaderUrl.FEED_URL + Category.urlquote(self.id)
+        self.fetchUrl = ReaderUrl.FEED_URL + Category.urlQuote(self.id)
 
 class Item(object):
     """
