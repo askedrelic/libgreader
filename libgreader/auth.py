@@ -147,6 +147,7 @@ class OAuthMethod(AuthenticationMethod):
         self.token_key         = None
         self.token_secret      = None
         self.callback          = None
+        self.username          = "OAuth"
 
     def setCallback(self, callback_url):
         self.callback = '&oauth_callback=%s' % callback_url
