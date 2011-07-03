@@ -14,7 +14,7 @@ Licensing included in LICENSE.txt
 """
 
 __author__  = "Matt Behrens <askedrelic@gmail.com>"
-__version__ = "0.6.0dev"
+__version__ = "0.6.0beta1"
 __credits__ = "Matt Behrens <askedrelic@gmail.com>, Stephane Angel aka Twidi <s.angel@twidi.com>"
 
 from googlereader import GoogleReader
