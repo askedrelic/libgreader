@@ -19,16 +19,7 @@ import urllib2
 import urlparse
 import mechanize
 
-#ClientAuthMethod
-#User account I created for testing
-username = 'relic@asktherelic.com'
-password = 'testtest'
-
-#OAuth
-#Actual keys for my domain :/
-#Probably not the best to have these public, but fuck it
-oauth_key = 'www.asktherelic.com'
-oauth_secret = 'WtAfQlY4+MJqsge45b9VuwNn'
+from config import *
 
 #automated approval of oauth url
 #returns mechanize Response of the last "You have accepted" page
@@ -67,7 +58,7 @@ class TestClientAuthMethod(unittest.TestCase):
         reader = GoogleReader(ca)
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
-        self.assertEqual('relic', info['userName'])
+        self.assertEqual(firstname, info['userName'])
 
 class TestOAuth(unittest.TestCase):
     def test_oauth_login(self):
@@ -91,7 +82,7 @@ class TestOAuth(unittest.TestCase):
 
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
-        self.assertEqual('relic', info['userName'])
+        self.assertEqual(firstname, info['userName'])
 
     def test_full_auth_process_with_callback(self):
         auth = OAuthMethod(oauth_key, oauth_secret)
@@ -112,7 +103,7 @@ class TestOAuth(unittest.TestCase):
 
         info = reader.getUserInfo()
         self.assertEqual(dict, type(info))
-        self.assertEqual('relic', info['userName'])
+        self.assertEqual(firstname, info['userName'])
 
 if __name__ == '__main__':
     unittest.main()

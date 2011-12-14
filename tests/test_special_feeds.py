@@ -20,10 +20,7 @@ import urlparse
 import mechanize
 import re
 
-#ClientAuthMethod
-#User account I created for testing
-username = 'relic@asktherelic.com'
-password = 'testtest'
+from config import *
 
 class TestSpecialFeeds(unittest.TestCase):
     def test_reading_list_exists(self):
