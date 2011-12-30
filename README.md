@@ -10,6 +10,26 @@ Created with help from:
 
 See Usage.md for further detailed instructions.
 
+###Contributions
+
+Want to contribute?
+
+First, fork the repository on Github to make changes on your branch.
+Then, create a dev environment using a virtualenv:
+
+	$ pip install virtualenvwrapper
+	$ mkvirtualenv libgreader --no-site-packages
+
+Clone your fork and install the development requirements, required for running the tests:
+
+	$ pip install -r dev_requirements.txt
+
+Then run the tests:
+
+	$ python setup.py test
+
+Now hack away! Write tests which show that a bug was fixed or that the feature works as expected. Then send a pull request and bug me until it gets merged in and published.
+
 ###TODO
 
 * Add most url endpoints?
