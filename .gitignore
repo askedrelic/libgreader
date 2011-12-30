@@ -1,4 +1,6 @@
 *.pyc
+*.pyo
 *.swp
+bin
 build/
 dist/
