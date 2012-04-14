@@ -18,6 +18,6 @@ __version__ = "0.6.0beta1"
 __credits__ = "Matt Behrens <askedrelic@gmail.com>, Stephane Angel aka Twidi <s.angel@twidi.com>"
 
 from googlereader import GoogleReader
-from auth import AuthenticationMethod, ClientAuthMethod, OAuthMethod
+from auth import AuthenticationMethod, ClientAuthMethod, OAuthMethod, OAuth2Method
 from items import *
 from url import ReaderUrl

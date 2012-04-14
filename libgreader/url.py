@@ -4,6 +4,7 @@ class ReaderUrl(object):
     READER_BASE_URL        = 'https://www.google.com/reader/api'
     API_URL                = READER_BASE_URL + '/0/'
 
+    ACTION_TOKEN_URL       = API_URL + 'token'
     USER_INFO_URL          = API_URL + 'user-info'
 
     SUBSCRIPTION_LIST_URL  = API_URL + 'subscription/list'
