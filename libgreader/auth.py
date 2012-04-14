@@ -266,11 +266,6 @@ class OAuth2Method(AuthenticationMethod):
 
     def setAccessToken(self):
         """Completes loging process, must return user instance"""
-        if self.data.get('error'):
-            error = self.data.get('error_description') or self.data['error']
-            raise AuthFailed(self, error)
-
-        client_id, client_secret = self.get_key_and_secret()
         params = {
             'grant_type': 'authorization_code',  # request auth code
             'code': self.code,                   # server response code
