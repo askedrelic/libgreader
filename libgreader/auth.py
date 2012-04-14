@@ -249,6 +249,7 @@ class OAuth2Method(AuthenticationMethod):
         self.authorized_client = None
         self.code              = None
         self.access_token      = None
+        self.action_token      = None
         self.redirect_uri      = None
         self.username          = "OAuth2"
 
@@ -264,8 +265,14 @@ class OAuth2Method(AuthenticationMethod):
         }
         return self.AUTHORIZATION_URL + '?' + urllib.urlencode(args)
 
+    def setActionToken(self):
+        '''
+        Get action to prevent XSRF attacks
+        http://code.google.com/p/google-reader-api/wiki/ActionToken
+        '''
+        self.action_token = self.get(ReaderUrl.ACTION_TOKEN_URL)
+
     def setAccessToken(self):
-        """Completes loging process, must return user instance"""
         params = {
             'grant_type': 'authorization_code',  # request auth code
             'code': self.code,                   # server response code
@@ -279,7 +286,7 @@ class OAuth2Method(AuthenticationMethod):
 
         try:
             response = simplejson.loads(urllib2.urlopen(request).read())
-        except HTTPError, e:
+        except urllib2.HTTPError, e:
             raise IOError('Error setting Access Token')
 
         if int(response.get('status')) != 200 or response.get('error'):
@@ -290,13 +297,16 @@ class OAuth2Method(AuthenticationMethod):
     def authFromAccessToken(self, access_token):
         self.access_token = access_token
 
-    def get(self, url, parameters={}):
+    def get(self, url, parameters=None):
         if not self.access_token:
             raise IOError("No authorized client available.")
+        if parameters is None:
+            parameters = {}
         parameters.update({'access_token': self.access_token, 'alt': 'json'})
-        request = Request(url + '?' + self.getParameters(parameters))
+        request = urllib2.Request(url + '?' + self.getParameters(parameters))
         try:
-            return toUnicode(urllib2.urlopen(request).read())
+            response = urllib2.urlopen(request).read()
+            return toUnicode(response)
         except (ValueError, KeyError, IOError):
             return None
 
@@ -305,7 +315,7 @@ class OAuth2Method(AuthenticationMethod):
             raise IOError("No authorized client available.")
         urlParameters.update({'access_token': self.access_token, 'alt': 'json'})
         getString = self.getParameters(urlParameters)
-        request = Request(url + '?' + self.getParameters(parameters))
+        request = urllib2.Request(url + '?' + self.getParameters(parameters))
         postString = self.postParameters(postParameters)
         try:
             response = urllib2.urlopen(request, data=postString)
