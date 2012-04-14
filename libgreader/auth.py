@@ -226,3 +226,94 @@ class OAuthMethod(AuthenticationMethod):
             return toUnicode(content)
         else:
             raise IOError("No authorized client available.")
+
+class OAuth2Method(AuthenticationMethod):
+    '''
+    Google OAuth2 base method.
+    '''
+    GOOGLE_URL = 'https://accounts.google.com'
+    AUTHORIZATION_URL = GOOGLE_URL + '/o/oauth2/auth'
+    ACCESS_TOKEN_URL = GOOGLE_URL + '/o/oauth2/token'
+    SCOPE = [
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.google.com/reader/api/*',
+    ]
+
+    def __init__(self, client_id, client_secret):
+        if not has_oauth:
+            raise ImportError("No module named oauth2")
+        super(OAuth2Method, self).__init__()
+        self.client_id         = client_id
+        self.client_secret     = client_secret
+        self.authorized_client = None
+        self.code              = None
+        self.access_token      = None
+        self.redirect_uri      = None
+        self.username          = "OAuth2"
+
+    def setRedirectUri(self, redirect_uri):
+        self.redirect_uri = redirect_uri
+
+    def buildAuthUrl(self):
+        args = {
+            'client_id': self.client_id,
+            'redirect_uri': self.redirect_uri,
+            'scope': ' '.join(self.SCOPE),
+            'response_type': 'code',
+        }
+        return self.AUTHORIZATION_URL + '?' + urllib.urlencode(args)
+
+    def setAccessToken(self):
+        """Completes loging process, must return user instance"""
+        if self.data.get('error'):
+            error = self.data.get('error_description') or self.data['error']
+            raise AuthFailed(self, error)
+
+        client_id, client_secret = self.get_key_and_secret()
+        params = {
+            'grant_type': 'authorization_code',  # request auth code
+            'code': self.code,                   # server response code
+            'client_id': self.client_id,
+            'client_secret': self.client_secret,
+            'redirect_uri': self.redirect_uri
+        }
+        headers = {'Content-Type': 'application/x-www-form-urlencoded'}
+        request = urllib2.Request(self.ACCESS_TOKEN_URL, data=urllib.urlencode(params),
+                          headers=headers)
+
+        try:
+            response = simplejson.loads(urllib2.urlopen(request).read())
+        except HTTPError, e:
+            raise IOError('Error setting Access Token')
+
+        if int(response.get('status')) != 200 or response.get('error'):
+            raise IOError('Error setting Access Token')
+        else:
+            self.authFromAccessToken(response['access_token'])
+
+    def authFromAccessToken(self, access_token):
+        self.access_token = access_token
+
+    def get(self, url, parameters={}):
+        if not self.access_token:
+            raise IOError("No authorized client available.")
+        parameters.update({'access_token': self.access_token, 'alt': 'json'})
+        request = Request(url + '?' + self.getParameters(parameters))
+        try:
+            return toUnicode(urllib2.urlopen(request).read())
+        except (ValueError, KeyError, IOError):
+            return None
+
+    def post(self, url, postParameters=None, urlParameters={}):
+        if not self.access_token:
+            raise IOError("No authorized client available.")
+        urlParameters.update({'access_token': self.access_token, 'alt': 'json'})
+        getString = self.getParameters(urlParameters)
+        request = Request(url + '?' + self.getParameters(parameters))
+        postString = self.postParameters(postParameters)
+        try:
+            response = urllib2.urlopen(request, data=postString)
+            toUnicode(response.read())
+        except (ValueError, KeyError, IOError):
+            return None
