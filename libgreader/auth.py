@@ -4,6 +4,7 @@ import urllib
 import urllib2
 import urlparse
 import time
+import simplejson
 
 try:
     import oauth2 as oauth
@@ -237,7 +238,7 @@ class OAuth2Method(AuthenticationMethod):
     SCOPE = [
         'https://www.googleapis.com/auth/userinfo.email',
         'https://www.googleapis.com/auth/userinfo.profile',
-        'https://www.google.com/reader/api/*',
+        'https://www.google.com/reader/api/',
     ]
 
     def __init__(self, client_id, client_secret):
@@ -281,16 +282,19 @@ class OAuth2Method(AuthenticationMethod):
             'redirect_uri': self.redirect_uri
         }
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        request = urllib2.Request(self.ACCESS_TOKEN_URL, data=urllib.urlencode(params),
-                          headers=headers)
+        request = urllib2.Request(
+            self.ACCESS_TOKEN_URL,
+            data=urllib.urlencode(params),
+            headers=headers
+            )
 
         try:
             response = simplejson.loads(urllib2.urlopen(request).read())
         except urllib2.HTTPError, e:
-            raise IOError('Error setting Access Token')
+            raise IOError('Error getting Access Token')
 
-        if int(response.get('status')) != 200 or response.get('error'):
-            raise IOError('Error setting Access Token')
+        if 'access_token' not in response:
+            raise IOError('Error getting Access Token')
         else:
             self.authFromAccessToken(response['access_token'])
 
@@ -307,7 +311,7 @@ class OAuth2Method(AuthenticationMethod):
         try:
             response = urllib2.urlopen(request).read()
             return toUnicode(response)
-        except (ValueError, KeyError, IOError):
+        except (ValueError, KeyError, IOError) as e:
             return None
 
     def post(self, url, postParameters=None, urlParameters={}):
