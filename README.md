@@ -59,7 +59,9 @@ Now hack away! Write tests which show that a bug was fixed or that the feature w
 Originally created with help from:
 
 [http://blog.martindoms.com/2009/08/15/using-the-google-reader-api-part-1/]()
+
 [http://code.google.com/p/pyrfeed/wiki/GoogleReaderAPI]()
+
 [http://groups.google.com/group/fougrapi]()
 
 Since then, [many have contributed to the development of libgreader](https://github.com/askedrelic/libgreader/blob/master/AUTHORS.md).
