@@ -242,8 +242,6 @@ class OAuth2Method(AuthenticationMethod):
     ]
 
     def __init__(self, client_id, client_secret):
-        if not has_oauth:
-            raise ImportError("No module named oauth2")
         super(OAuth2Method, self).__init__()
         self.client_id         = client_id
         self.client_secret     = client_secret
