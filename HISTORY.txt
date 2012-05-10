@@ -1,3 +1,8 @@
+v0.6 -- WIP
+    -OAuth2 support
+    -Deprecating OAuth support
+    -More internal code re-organization
+
 v0.5 -- 2010/12/29
     -Added project to PyPi, moved to real Python project structure
     -Style cleanup, more tests
