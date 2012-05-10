@@ -4,7 +4,12 @@ import urllib
 import urllib2
 import urlparse
 import time
-import simplejson
+
+try:
+    import json
+except:
+    # Python 2.6 support
+    import simplejson as json
 
 try:
     import oauth2 as oauth
@@ -287,7 +292,7 @@ class OAuth2Method(AuthenticationMethod):
             )
 
         try:
-            response = simplejson.loads(urllib2.urlopen(request).read())
+            response = json.loads(urllib2.urlopen(request).read())
         except urllib2.HTTPError, e:
             raise IOError('Error getting Access Token')
 
