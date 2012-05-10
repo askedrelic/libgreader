@@ -11,7 +11,10 @@ Unit tests for feeds. Requires mechanize for automated oauth authenication.
 
 """
 
-import unittest
+try:
+    import unittest2 as unittest
+except:
+    import unittest
 
 from libgreader import GoogleReader, OAuthMethod, ClientAuthMethod, Feed, ItemsContainer, Item, BaseFeed, SpecialFeed, ReaderUrl
 import urllib

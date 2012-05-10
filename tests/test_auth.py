@@ -11,7 +11,10 @@ Unit tests for oauth and ClientAuthMethod in libgreader. Requires mechanize for 
 
 """
 
-import unittest
+try:
+    import unittest2 as unittest
+except:
+    import unittest
 
 from libgreader import GoogleReader, OAuthMethod, OAuth2Method, ClientAuthMethod, Feed
 import urllib
@@ -60,7 +63,7 @@ def automated_oauth_approval(url):
     response2 = br.submit()
     return response2
 
-@unittest.skip('mostly broken')
+@unittest.skip('being deprecated')
 class TestOAuth(unittest.TestCase):
     def test_oauth_login(self):
         auth = OAuthMethod(oauth_key, oauth_secret)
@@ -73,7 +76,6 @@ class TestOAuth(unittest.TestCase):
         response = automated_oauth_approval(url)
         self.assertNotEqual(-1,response.get_data().find('You have successfully granted'))
 
-    @unittest.skip("demonstrating skipping")
     def test_full_auth_process_without_callback(self):
         auth = OAuthMethod(oauth_key, oauth_secret)
         auth.setRequestToken()
