@@ -14,6 +14,12 @@ setup(
 
     packages         = find_packages(),
     test_suite       = 'tests',
-    # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
-    #classifiers  = ['Development Status :: 3 - Alpha', ],
+
+	classifiers      = (
+	    'Intended Audience :: Developers',
+	    'Natural Language :: English',
+	    'Programming Language :: Python',
+	    'Programming Language :: Python :: 2.6',
+	    'Programming Language :: Python :: 2.7',
+	),
 )
