@@ -69,3 +69,74 @@ So assume the user goes, authenticates you, and now they are returning to http:/
 	auth.setAccessTokenFromCallback(token, token_secret, token_verifier)
 	reader = GoogleReader(auth)
 	print reader.getUserInfo()
+
+###Using libgreader on Google AppEngine
+If you want to use libgreader on Google AppEngine it is easier to use the Google's API for Python library which
+contains implementation of OAuth2 especially designed for AppEngine.
+
+Here is a minimal way to implement it:
+
+    from google.appengine.ext.webapp.util import login_required
+
+    from oauth2client.appengine import CredentialsProperty
+    from oauth2client.appengine import StorageByKeyName
+    from oauth2client.appengine import OAuth2WebServerFlow
+
+    from libgreader import GoogleReader
+    from libgreader.auth import GAPDecoratorAuthMethod
+
+    GOOGLE_URL = 'https://accounts.google.com'
+    AUTHORIZATION_URL = GOOGLE_URL + '/o/oauth2/auth'
+    ACCESS_TOKEN_URL = GOOGLE_URL + '/o/oauth2/token'
+    REDIRECT_URI = '<YOU REDIRECT URI>'
+
+    FLOW = OAuth2WebServerFlow(
+        client_id='<YOUR GOOGLE API CLIENT ID>',
+        client_secret='<YOUR GOOGLE API CLIENT SECRET>',
+        scope=[
+            'https://www.googleapis.com/auth/userinfo.email',
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.google.com/reader/api/',
+        ],
+        redirect_uri=REDIRECT_URI,
+        user_agent='<YOU USER AGENT>',
+        auth_uri=AUTHORIZATION_URL,
+        token_uri=ACCESS_TOKEN_URL)
+
+    class Credentials(db.Model):
+        credentials = CredentialsProperty()
+
+
+    #... Checking and obtaining credentials if needed
+    class MainHandler(webapp2.RequestHandler):
+	@login_required
+	def get(self):
+		user = users.get_current_user()
+
+        # get stored credentials for current user from the Datastore
+		credentials = StorageByKeyName(Credentials, user.user_id(), 'credentials').get()
+		
+		if credentials is None or credentials.invalid == True:
+            # we are not authorized (=no credentials) create an authorization URL
+			authorize_url = FLOW.step1_get_authorize_url(REDIRECT_URI)
+			template_values = {
+				'authurl': authorize_url
+			}
+            # a courtsey message to user to ask for authorization. we can just redirect here if we want
+			path = os.path.join(os.path.dirname(__file__), 'templates/template_authorize.html')
+			self.response.out.write(template.render(path, template_values))
+
+    #... Using credentials:
+    class SubscriptionListHandler(webapp2.RequestHandler):
+	@login_required
+	def get(self):
+		user = users.get_current_user()
+		
+		if user:
+			storage = StorageByKeyName(Credentials, user.user_id(), 'credentials')
+			credentials = storage.get()
+			
+            # Use the new AuthMethod to decorate all the requests with correct credentials
+			auth = GAPDecoratorAuthMethod(credentials)
+			reader = GoogleReader(auth)
+			reader.buildSubscriptionList()
