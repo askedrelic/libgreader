@@ -4,6 +4,7 @@ import urllib
 import urllib2
 import urlparse
 import time
+import httplib2
 
 try:
     import json
@@ -329,3 +330,45 @@ class OAuth2Method(AuthenticationMethod):
             toUnicode(response.read())
         except (ValueError, KeyError, IOError):
             return None
+
+class GAPDecoratorAuthMethod(AuthenticationMethod):
+    """
+    An adapter to work with Google API for Python OAuth2 wrapper.
+    Especially useful when deploying to Google AppEngine.
+    """
+    def __init__(self, credentials):
+        """
+        Initialize auth method with existing credentials.
+        Args:
+            credentials: OAuth2 credentials obtained via GAP OAuth2 library.
+        """
+        super(GAPDecoratorAuthMethod, self).__init__()
+        self._http = None
+        self._credentials = credentials
+
+    def _setupHttp(self):
+        """
+        Setup an HTTP session authorized by OAuth2.
+        """
+        if self._http == None:
+            http = httplib2.Http()
+            self._http = self._credentials.authorize(http)
+
+    def get(self, url, parameters=None):
+        """
+        Implement libgreader's interface for authenticated GET request
+        """
+        if self._http == None:
+            self._setupHttp()
+        uri = url + "?" + self.getParameters(parameters)
+        response, content = self._http.request(uri, "GET")
+        return content
+    def post(self, url, postParameters=None, urlParameters=None):
+        """
+        Implement libgreader's interface for authenticated POST request
+        """
+        if self._http == None:
+            self._setupHttp()
+        uri = url + "?" + self.getParameters(urlParameters)
+        body = self.postParameters(postParameters)
+        response, content = self._http.request(uri, "POST", body=body)
