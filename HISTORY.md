@@ -1,9 +1,13 @@
 #History
 
-##v0.6 - WIP
+##WIP
+*
+
+##v0.6 - 2012/08/10
 * OAuth2 support
 * Deprecating OAuth support
-* More internal code re-organization
+* Added auth support for Google App Engine with GAPDecoratorAuthMethod
+* Internal code re-organization
 
 ##v0.5 - 2010/12/29
 * Added project to PyPi, moved to real Python project structure
