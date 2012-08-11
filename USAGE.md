@@ -1,12 +1,12 @@
-##Usage
+#Usage
 The library is currently broken into 2 parts: The Authentication class and the GoogleReader class. 
 
 The Authentication class authenticates itself with Google and then provides a GET/POST method for making authenticated calls.  
-Currently, ClientLogin and OAuth are supported.
+Currently, ClientLogin, OAuth are supported.
 
 The GoogleReader class keeps track of user data and provides wrapper methods around known Reader urls.
 
-###ClientLogin
+##ClientLogin
 To get started using the ClientLogin auth type, create a new ClientAuthMethod class:
 
 ```python
@@ -25,11 +25,11 @@ Then make whatever requests you want:
 ```python
 print reader.getUserInfo()
 ```
-	
-###OAuth
+
+##OAuth
 The OAuth method is a bit more complicated, depending on whether you want to use a callback or not, and because oauth is just complicated.
 
-####No Callback
+###No Callback
 Send user to authorize with Google in a new window or JS lightbox, tell them to close the window when done authenicating
 
 The oauth key and secret are setup with Google for your domain [https://www.google.com/accounts/ManageDomains]()
@@ -59,7 +59,7 @@ reader = GoogleReader(auth)
 print reader.getUserInfo()
 ```
 
-####Callback
+###Callback
 User goes to Google, authenticates, then is automatically redirected to your callback url without using a new window, a much more seamless user experience
 
 Same opening bit, you still need an oauth key and secret from Google
@@ -92,7 +92,7 @@ reader = GoogleReader(auth)
 print reader.getUserInfo()
 ```
 
-###Using libgreader on Google AppEngine
+##Using libgreader on Google AppEngine
 If you want to use libgreader on Google AppEngine it is easier to use the Google's API for Python library which
 contains implementation of OAuth2 especially designed for AppEngine.
 
