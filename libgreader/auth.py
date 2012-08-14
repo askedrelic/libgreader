@@ -4,7 +4,6 @@ import urllib
 import urllib2
 import urlparse
 import time
-import httplib2
 
 try:
     import json
@@ -17,6 +16,12 @@ try:
     has_oauth = True
 except:
     has_oauth = False
+
+try:
+    import httplib2
+    has_httplib2 = True
+except:
+    has_httplib2 = False
 
 from googlereader import GoogleReader
 from url import ReaderUrl
@@ -342,6 +347,8 @@ class GAPDecoratorAuthMethod(AuthenticationMethod):
         Args:
             credentials: OAuth2 credentials obtained via GAP OAuth2 library.
         """
+        if not has_httplib2:
+            raise ImportError("No module named httplib2")
         super(GAPDecoratorAuthMethod, self).__init__()
         self._http = None
         self._credentials = credentials
