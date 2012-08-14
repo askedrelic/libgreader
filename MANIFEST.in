@@ -1,2 +1,1 @@
-include *.md
-include *.txt
+include README.md HISTORY.md LICENSE.txt
