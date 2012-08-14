@@ -3,7 +3,11 @@
 ##WIP
 *
 
-##v0.6 - 2012/08/10
+##v0.6.1 - 2012/08/13
+- cleanup sdist package contents, to not include tests
+- Remove httplib2 as a require import unless you are using GAPDecoratorAuthMethod
+
+##v0.6.0 - 2012/08/10
 * OAuth2 support
 * Deprecating OAuth support
 * Added auth support for Google App Engine with GAPDecoratorAuthMethod
