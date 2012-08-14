@@ -12,14 +12,17 @@ setup(
     url              = 'https://github.com/askedrelic/libgreader',
     license          = open("LICENSE.txt").read(),
 
-    packages         = find_packages(),
+    packages         = ['libgreader'],
     test_suite       = 'tests',
 
-	classifiers      = (
-	    'Intended Audience :: Developers',
-	    'Natural Language :: English',
-	    'Programming Language :: Python',
-	    'Programming Language :: Python :: 2.6',
-	    'Programming Language :: Python :: 2.7',
-	),
+    classifiers      = (
+        'Intended Audience :: Developers',
+        'Natural Language :: English',
+        'Operating System :: OS Independent',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Topic :: Internet :: WWW/HTTP',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+    ),
 )
