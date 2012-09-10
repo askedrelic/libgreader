@@ -194,6 +194,14 @@ class GoogleReader(object):
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
             {'ac':'subscribe', 's': feedUrl})
 
+    def unsubscribe(self, feedUrl):
+        """
+        Adds a feed to the top-level subscription list
+        """
+        return self.httpPost(
+            ReaderUrl.SUBSCRIPTION_EDIT_URL,
+            {'ac':'unsubscribe', 's': feedUrl})
+
     def getUserInfo(self):
         """
         Returns a dictionary of user info that google stores.
