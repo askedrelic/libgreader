@@ -189,18 +189,38 @@ class GoogleReader(object):
     def subscribe(self, feedUrl):
         """
         Adds a feed to the top-level subscription list
+
+        Ubscribing seems idempotent, you can subscribe multiple times
+        without error
+
+        returns True or throws urllib2 HTTPError
         """
-        return self.httpPost(
+        response = self.httpPost(
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
             {'ac':'subscribe', 's': feedUrl})
+        # FIXME - need better return API
+        if 'OK' in response:
+            return True
+        else:
+            return False
 
     def unsubscribe(self, feedUrl):
         """
         Removes a feed url from the top-level subscription list
+
+        Unsubscribing seems idempotent, you can unsubscribe multiple times
+        without error
+
+        returns True or throws urllib2 HTTPError
         """
-        return self.httpPost(
+        response = self.httpPost(
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
             {'ac':'unsubscribe', 's': feedUrl})
+        # FIXME - need better return API
+        if 'OK' in response:
+            return True
+        else:
+            return False
 
     def getUserInfo(self):
         """
