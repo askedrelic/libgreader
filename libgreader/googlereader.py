@@ -196,7 +196,7 @@ class GoogleReader(object):
 
     def unsubscribe(self, feedUrl):
         """
-        Adds a feed to the top-level subscription list
+        Removes a feed url from the top-level subscription list
         """
         return self.httpPost(
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
