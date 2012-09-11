@@ -22,6 +22,7 @@ import urllib2
 import urlparse
 import mechanize
 import re
+import time
 
 from config import *
 
@@ -46,6 +47,25 @@ class TestSpecialFeeds(unittest.TestCase):
         feed_item = container.items[0]
         self.assertTrue(feed_item.markRead())
         self.assertTrue(feed_item.isRead())
+
+    def test_subscribe_unsubscribe(self):
+        ca = ClientAuthMethod(username,password)
+        reader = GoogleReader(ca)
+        
+        slashdot = 'feed/http://rss.slashdot.org/Slashdot/slashdot'
+
+        #unsubscribe always return true; revert feedlist state
+        self.assertTrue(reader.unsubscribe(slashdot))
+
+        # now subscribe
+        self.assertTrue(reader.subscribe(slashdot))
+
+        # wait for server to update
+        time.sleep(1)
+        reader.buildSubscriptionList()
+
+        # test subscribe successful
+        self.assertIn(slashdot, [x.id for x in reader.getSubscriptionList()])
 
 if __name__ == '__main__':
     unittest.main()
