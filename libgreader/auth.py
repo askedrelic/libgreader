@@ -94,7 +94,7 @@ class ClientAuthMethod(AuthenticationMethod):
         req = urllib2.Request(url)
         req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
         postString = self.postParameters(postParameters)
-        r = urllib2.urlopen(req, data=poststring)
+        r = urllib2.urlopen(req, data=postString)
         data = r.read()
         r.close()
         return toUnicode(data)
