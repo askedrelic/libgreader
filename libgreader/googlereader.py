@@ -199,7 +199,7 @@ class GoogleReader(object):
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
             {'ac':'subscribe', 's': feedUrl})
         # FIXME - need better return API
-        if 'OK' in response:
+        if response and 'OK' in response:
             return True
         else:
             return False
@@ -217,7 +217,7 @@ class GoogleReader(object):
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
             {'ac':'unsubscribe', 's': feedUrl})
         # FIXME - need better return API
-        if 'OK' in response:
+        if response and 'OK' in response:
             return True
         else:
             return False
