@@ -14,7 +14,7 @@ Unit tests for oauth and ClientAuthMethod in libgreader. Requires mechanize for 
 #ClientAuthMethod
 #User account I created for testing
 username  = 'libgreadertest@gmail.com'
-password  = 'libgreadertest'
+password  = 'libgreadertestlibgreadertest'
 firstname = 'Foo'
 
 #OAuth
