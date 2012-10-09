@@ -332,17 +332,24 @@ class OAuth2Method(AuthenticationMethod):
         except (ValueError, KeyError, IOError) as e:
             return None
 
-    def post(self, url, postParameters=None, urlParameters={}):
+    def post(self, url, postParameters=None, urlParameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
         if not self.access_token:
             raise IOError("No authorized client available.")
-        urlParameters.update({'access_token': self.access_token, 'alt': 'json'})
-        getString = self.getParameters(urlParameters)
-        request = urllib2.Request(url + '?' + self.getParameters(parameters))
+        if not self.action_token:
+            raise IOError("Need to generate action token.")
+        if urlParameters is None:
+            urlParameters = {}
+        headers = {'Authorization': 'Bearer ' + self.access_token}
+        postParameters.update({'T':self.action_token})
         postString = self.postParameters(postParameters)
+        request = urllib2.Request(url + '?' + self.getParameters(urlParameters), data=postString, headers=headers)
         try:
-            response = urllib2.urlopen(request, data=postString)
-            toUnicode(response.read())
-        except (ValueError, KeyError, IOError):
+            response = urllib2.urlopen(request)
+            return toUnicode(response.read())
+        except (ValueError, KeyError, IOError) as e:
             return None
 
 class GAPDecoratorAuthMethod(AuthenticationMethod):

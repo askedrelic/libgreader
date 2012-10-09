@@ -154,6 +154,28 @@ class TestOAuth2(unittest.TestCase):
         self.assertEqual(dict, type(info))
         self.assertEqual(firstname, info['userName'])
 
+    def test_oauth_subscribe(self):
+        auth = OAuth2Method(client_id, client_secret)
+        auth.setRedirectUri(redirect_url)
+        url = auth.buildAuthUrl()
+        token = automated_oauth2_approval(url)
+        auth.code = token
+        auth.setAccessToken()
+        auth.setActionToken()
+
+        reader = GoogleReader(auth)
+
+        slashdot = 'feed/http://rss.slashdot.org/Slashdot/slashdot'
+        #unsubscribe always return true; revert feedlist state
+        self.assertTrue(reader.unsubscribe(slashdot))
+        # now subscribe
+        self.assertTrue(reader.subscribe(slashdot))
+        # wait for server to update
+        import time
+        time.sleep(1)
+        reader.buildSubscriptionList()
+        # test subscribe successful
+        self.assertIn(slashdot, [x.id for x in reader.getSubscriptionList()])
 
 if __name__ == '__main__':
     unittest.main()
