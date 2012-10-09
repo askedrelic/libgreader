@@ -86,14 +86,15 @@ class ClientAuthMethod(AuthenticationMethod):
         return toUnicode(data)
 
     def post(self, url, postParameters=None, urlParameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
         if urlParameters:
-            getString = self.getParameters(urlParameters)
-            req = urllib2.Request(url + "?" + getString)
-        else:
-            req = urllib2.Request(url)
+            url = url + "?" + self.getParameters(urlParameters)
+        req = urllib2.Request(url)
         req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
         postString = self.postParameters(postParameters)
-        r = urllib2.urlopen(req, data=postString)
+        r = urllib2.urlopen(req, data=poststring)
         data = r.read()
         r.close()
         return toUnicode(data)
@@ -227,6 +228,9 @@ class OAuthMethod(AuthenticationMethod):
             raise IOError("No authorized client available.")
 
     def post(self, url, postParameters=None, urlParameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
         if self.authorized_client:
             if urlParameters:
                 getString = self.getParameters(urlParameters)
@@ -279,6 +283,8 @@ class OAuth2Method(AuthenticationMethod):
         '''
         Get action to prevent XSRF attacks
         http://code.google.com/p/google-reader-api/wiki/ActionToken
+
+        TODO: mask token expiring? handle regenerating?
         '''
         self.action_token = self.get(ReaderUrl.ACTION_TOKEN_URL)
 
@@ -311,6 +317,9 @@ class OAuth2Method(AuthenticationMethod):
         self.access_token = access_token
 
     def get(self, url, parameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
         if not self.access_token:
             raise IOError("No authorized client available.")
         if parameters is None:
