@@ -3,6 +3,9 @@
 ##WIP
 *
 
+##v0.6.2 - 2012/10/11
+- Fix broken post() method with OAuth2 auth, https://github.com/askedrelic/libgreader/issues/11
+
 ##v0.6.1 - 2012/08/13
 - cleanup sdist package contents, to not include tests
 - Remove httplib2 as a require import unless you are using GAPDecoratorAuthMethod
