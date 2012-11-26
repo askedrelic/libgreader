@@ -17,23 +17,23 @@ class ItemsContainer(object):
         self.unread         = 0
         self.continuation   = None
 
-    def _getContent(self, excludeRead=False, continuation=None):
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20):
         """
         Get content from google reader with specified parameters.
         Must be overladed in inherited clases
         """
         return None
 
-    def loadItems(self, excludeRead=False):
+    def loadItems(self, excludeRead=False, loadLimit=20):
         """
         Load items and call itemsLoadedDone to transform data in objects
         """
         self.clearItems()
         self.loadtLoadOk    = False
         self.lastLoadLength = 0
-        self._itemsLoadedDone(self._getContent(excludeRead, None))
+        self._itemsLoadedDone(self._getContent(excludeRead, None, loadLimit))
 
-    def loadMoreItems(self, excludeRead=False, continuation=None):
+    def loadMoreItems(self, excludeRead=False, continuation=None, loadLimit=20):
         """
         Load more items using the continuation parameters of previously loaded items.
         """
@@ -129,8 +129,8 @@ class Category(ItemsContainer):
     def getFeeds(self):
         return self.feeds
 
-    def _getContent(self, excludeRead=False, continuation=None):
-        return self.googleReader.getCategoryContent(self, excludeRead, continuation)
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20):
+        return self.googleReader.getCategoryContent(self, excludeRead, continuation, loadLimit)
 
     def countUnread(self):
         self.unread = sum([feed.unread for feed in self.feeds])
@@ -185,8 +185,8 @@ class BaseFeed(ItemsContainer):
     def getCategories(self):
         return self.categories
 
-    def _getContent(self, excludeRead=False, continuation=None):
-        return self.googleReader.getFeedContent(self, excludeRead, continuation)
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20):
+        return self.googleReader.getFeedContent(self, excludeRead, continuation, loadLimit)
 
     def markItemRead(self, item, read):
         super(BaseFeed, self).markItemRead(item, read)

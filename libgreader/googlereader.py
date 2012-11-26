@@ -131,7 +131,7 @@ class GoogleReader(object):
 
         return True
 
-    def _getFeedContent(self, url, excludeRead=False, continuation=None):
+    def _getFeedContent(self, url, excludeRead=False, continuation=None, loadLimit=20):
         """
         A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
@@ -151,6 +151,7 @@ class GoogleReader(object):
             parameters['xt'] = 'user/-/state/com.google/read'
         if continuation:
             parameters['c'] = continuation
+        parameters['n'] = loadLimit
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
@@ -160,17 +161,17 @@ class GoogleReader(object):
             objects.append(Item(self, item, parent))
         return objects
 
-    def getFeedContent(self, feed, excludeRead=False, continuation=None):
+    def getFeedContent(self, feed, excludeRead=False, continuation=None, loadLimit=20):
         """
         Return items for a particular feed
         """
-        return self._getFeedContent(feed.fetchUrl, excludeRead, continuation)
+        return self._getFeedContent(feed.fetchUrl, excludeRead, continuation, loadLimit)
 
-    def getCategoryContent(self, category, excludeRead=False, continuation=None):
+    def getCategoryContent(self, category, excludeRead=False, continuation=None, loadLimit=20):
         """
         Return items for a particular category
         """
-        return self._getFeedContent(category.fetchUrl, excludeRead, continuation)
+        return self._getFeedContent(category.fetchUrl, excludeRead, continuation, loadLimit)
 
     def removeItemTag(self, item, tag):
         return self.httpPost(ReaderUrl.EDIT_TAG_URL,
