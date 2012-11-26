@@ -392,13 +392,13 @@ class GAPDecoratorAuthMethod(AuthenticationMethod):
         """
         Implement libgreader's interface for authenticated POST request
         """
-        if self.action_token == None:
-            self.action_token = self.get(ReaderUrl.ACTION_TOKEN_URL)
+        if self._action_token == None:
+            self._action_token = self.get(ReaderUrl.ACTION_TOKEN_URL)
 
         if self._http == None:
             self._setupHttp()
         uri = url + "?" + self.getParameters(urlParameters)
-        postParameters.update({'T':self.action_token})
+        postParameters.update({'T':self._action_token})
         body = self.postParameters(postParameters)
         response, content = self._http.request(uri, "POST", body=body)
         return content
