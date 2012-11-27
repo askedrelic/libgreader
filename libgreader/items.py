@@ -41,7 +41,7 @@ class ItemsContainer(object):
         self.lastLoadLength = 0
         if not continuation and not self.continuation:
             return
-        self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation))
+        self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation, loadLimit))
 
     def _itemsLoadedDone(self, data):
         """
