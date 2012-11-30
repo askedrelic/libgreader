@@ -48,6 +48,15 @@ class TestSpecialFeeds(unittest.TestCase):
         self.assertTrue(feed_item.markRead())
         self.assertTrue(feed_item.isRead())
 
+    def test_loading_item_count(self):
+        ca = ClientAuthMethod(username,password)
+        reader = GoogleReader(ca)
+        container = SpecialFeed(reader, ReaderUrl.READING_LIST)
+        container.loadItems(loadLimit=5)
+
+        self.assertEqual(5, len(container.items))
+        self.assertEqual(5, container.countItems())
+
     def test_subscribe_unsubscribe(self):
         ca = ClientAuthMethod(username,password)
         reader = GoogleReader(ca)
