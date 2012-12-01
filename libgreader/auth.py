@@ -51,7 +51,7 @@ class AuthenticationMethod(object):
 
     def postParameters(self, post=None):
         if post is not None:
-            post_string = urllib.urlencode(post)
+            post_string = urllib.urlencode(post, True)
         else:
             post_string = None
         return post_string
