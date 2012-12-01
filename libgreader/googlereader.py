@@ -35,6 +35,8 @@ class GoogleReader(object):
         self.specialFeeds   = {}
         self.orphanFeeds    = []
         self.userId         = None
+        self.addTagBacklog  = {}
+        self.inItemTagTransaction   = False
 
     def toJSON(self):
         """
@@ -177,10 +179,35 @@ class GoogleReader(object):
         return self.httpPost(ReaderUrl.EDIT_TAG_URL,
                              {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
 
+    def beginAddItemTagTransaction(self):
+        if self.inItemTagTransaction:
+            raise "Already in addItemTag transaction"
+        self.addTagBacklog = {}
+        self.inItemTagTransaction = True
+
     def addItemTag(self, item, tag):
-        return self.httpPost(
-            ReaderUrl.EDIT_TAG_URL,
-            {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+        if self.inItemTagTransaction:
+            # XXX: what if item's parent is not a feed?
+            if not tag in self.addTagBacklog:
+                self.addTagBacklog[tag] = []                
+            self.addTagBacklog[tag].append({'i': item.id, 's': item.parent.id})
+            return "OK"
+        else:
+            return self.httpPost(
+                ReaderUrl.EDIT_TAG_URL,
+                {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+    
+    def commitAddItemTagTransaction(self):
+        if self.inItemTagTransaction:
+            for tag in self.addTagBacklog:
+                itemIds = [item['i'] for item in self.addTagBacklog[tag]]
+                feedIds = [item['s'] for item in self.addTagBacklog[tag]]
+                self.httpPost(ReaderUrl.EDIT_TAG_URL,
+                    {'i': itemIds, 'a': tag, 'ac': 'edit-tags', 's': feedIds})
+            self.addTagBacklog = {}
+            self.inItemTagTransaction = False
+        else:
+            raise "Not in addItemTag transaction"
 
     def markFeedAsRead(self, feed):
         return self.httpPost(
