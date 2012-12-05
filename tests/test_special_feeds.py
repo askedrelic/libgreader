@@ -76,5 +76,63 @@ class TestSpecialFeeds(unittest.TestCase):
         # test subscribe successful
         self.assertIn(slashdot, [x.id for x in reader.getSubscriptionList()])
 
+    def test_add_remove_single_feed_tag(self):
+        ca = ClientAuthMethod(username,password)
+        reader = GoogleReader(ca)
+        container = SpecialFeed(reader, ReaderUrl.READING_LIST)
+        container.loadItems()
+
+        tag_name = 'test-single-tag'
+        feed_1 = container.items[0]
+
+        # assert tag doesn't exist yet
+        self.assertFalse(any([tag_name in x for x in feed_1.data['categories']]))
+
+        # add tag
+        reader.addItemTag(feed_1, 'user/-/label/' + tag_name)
+
+        #reload now
+        container.clearItems()
+        container.loadItems()
+        feed_2 = container.items[0]
+
+        # assert tag is in new
+        self.assertTrue(any([tag_name in x for x in feed_2.data['categories']]))
+
+        # remove tag
+        reader.removeItemTag(feed_2, 'user/-/label/' + tag_name)
+
+        #reload now
+        container.clearItems()
+        container.loadItems()
+        feed_3 = container.items[0]
+
+        # assert tag is removed
+        self.assertFalse(any([tag_name in x for x in feed_3.data['categories']]))
+
+    def test_transaction_add_feed_tags(self):
+        ca = ClientAuthMethod(username,password)
+        reader = GoogleReader(ca)
+        container = SpecialFeed(reader, ReaderUrl.READING_LIST)
+        container.loadItems()
+
+        tags = ['test-transaction%s' % x for x in range(5)]
+        feed_1 = container.items[0]
+
+        reader.beginAddItemTagTransaction()
+        for tag in tags:
+            reader.addItemTag(feed_1, 'user/-/label/' + tag)
+        reader.commitAddItemTagTransaction()
+
+        #reload now
+        container.clearItems()
+        container.loadItems()
+        feed_2 = container.items[0]
+
+        # figure out if all tags were returned
+        tags_exist = [any(map(lambda tag: tag in x, tags)) for x in feed_2.data['categories']]
+        tag_exist_count = sum([1 for x in tags_exist if x])
+        self.assertEqual(5, tag_exist_count)
+
 if __name__ == '__main__':
     unittest.main()
