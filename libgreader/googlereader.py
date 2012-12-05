@@ -175,9 +175,18 @@ class GoogleReader(object):
         """
         return self._getFeedContent(category.fetchUrl, excludeRead, continuation, loadLimit)
 
-    def removeItemTag(self, item, tag):
+    def _modifyItemTag(self, item_id, action, tag):
+        """ wrapper around actual HTTP POST string for modify tags """
         return self.httpPost(ReaderUrl.EDIT_TAG_URL,
-                             {'i': item.id, 'r': tag, 'ac': 'edit-tags', })
+                             {'i': item_id, action: tag, 'ac': 'edit-tags'})
+
+    def removeItemTag(self, item, tag):
+        """
+        Remove a tag to an individal item.
+
+        tag string must be in form "user/-/label/[tag]"
+        """
+        return self._modifyItemTag(item.id, 'r', tag)
 
     def beginAddItemTagTransaction(self):
         if self.inItemTagTransaction:
@@ -186,6 +195,11 @@ class GoogleReader(object):
         self.inItemTagTransaction = True
 
     def addItemTag(self, item, tag):
+        """
+        Add a tag to an individal item.
+
+        tag string must be in form "user/-/label/[tag]"
+        """
         if self.inItemTagTransaction:
             # XXX: what if item's parent is not a feed?
             if not tag in self.addTagBacklog:
@@ -193,9 +207,8 @@ class GoogleReader(object):
             self.addTagBacklog[tag].append({'i': item.id, 's': item.parent.id})
             return "OK"
         else:
-            return self.httpPost(
-                ReaderUrl.EDIT_TAG_URL,
-                {'i': item.id, 'a': tag, 'ac': 'edit-tags', })
+            return self._modifyItemTag(item.id, 'a', tag)
+
     
     def commitAddItemTagTransaction(self):
         if self.inItemTagTransaction:
