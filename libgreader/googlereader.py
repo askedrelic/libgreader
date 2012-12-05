@@ -206,6 +206,7 @@ class GoogleReader(object):
                     {'i': itemIds, 'a': tag, 'ac': 'edit-tags', 's': feedIds})
             self.addTagBacklog = {}
             self.inItemTagTransaction = False
+            return True
         else:
             raise Exception("Not in addItemTag transaction")
 
