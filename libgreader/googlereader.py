@@ -181,7 +181,7 @@ class GoogleReader(object):
 
     def beginAddItemTagTransaction(self):
         if self.inItemTagTransaction:
-            raise "Already in addItemTag transaction"
+            raise Exception("Already in addItemTag transaction")
         self.addTagBacklog = {}
         self.inItemTagTransaction = True
 
@@ -207,7 +207,7 @@ class GoogleReader(object):
             self.addTagBacklog = {}
             self.inItemTagTransaction = False
         else:
-            raise "Not in addItemTag transaction"
+            raise Exception("Not in addItemTag transaction")
 
     def markFeedAsRead(self, feed):
         return self.httpPost(
