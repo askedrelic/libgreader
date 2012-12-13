@@ -17,23 +17,23 @@ class ItemsContainer(object):
         self.unread         = 0
         self.continuation   = None
 
-    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, since=None, until=None):
         """
         Get content from google reader with specified parameters.
         Must be overladed in inherited clases
         """
         return None
 
-    def loadItems(self, excludeRead=False, loadLimit=20, publishedSince=None, publishedUntil=None):
+    def loadItems(self, excludeRead=False, loadLimit=20, since=None, until=None):
         """
         Load items and call itemsLoadedDone to transform data in objects
         """
         self.clearItems()
         self.loadtLoadOk    = False
         self.lastLoadLength = 0
-        self._itemsLoadedDone(self._getContent(excludeRead, None, loadLimit, publishedSince, publishedUntil))
+        self._itemsLoadedDone(self._getContent(excludeRead, None, loadLimit, since, until))
 
-    def loadMoreItems(self, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
+    def loadMoreItems(self, excludeRead=False, continuation=None, loadLimit=20, since=None, until=None):
         """
         Load more items using the continuation parameters of previously loaded items.
         """
@@ -41,7 +41,7 @@ class ItemsContainer(object):
         self.lastLoadLength = 0
         if not continuation and not self.continuation:
             return
-        self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation, loadLimit, publishedSince, publishedUntil))
+        self._itemsLoadedDone(self._getContent(excludeRead, continuation or self.continuation, loadLimit, since, until))
 
     def _itemsLoadedDone(self, data):
         """
@@ -129,8 +129,8 @@ class Category(ItemsContainer):
     def getFeeds(self):
         return self.feeds
 
-    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
-        return self.googleReader.getCategoryContent(self, excludeRead, continuation, loadLimit, publishedSince, publishedUntil)
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, since=None, until=None):
+        return self.googleReader.getCategoryContent(self, excludeRead, continuation, loadLimit, since, until)
 
     def countUnread(self):
         self.unread = sum([feed.unread for feed in self.feeds])
@@ -185,8 +185,8 @@ class BaseFeed(ItemsContainer):
     def getCategories(self):
         return self.categories
 
-    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
-        return self.googleReader.getFeedContent(self, excludeRead, continuation, loadLimit, publishedSince, publishedUntil)
+    def _getContent(self, excludeRead=False, continuation=None, loadLimit=20, since=None, until=None):
+        return self.googleReader.getFeedContent(self, excludeRead, continuation, loadLimit, since, until)
 
     def markItemRead(self, item, read):
         super(BaseFeed, self).markItemRead(item, read)
@@ -268,8 +268,10 @@ class Item(object):
         self.author = item.get('author', None)
         self.content = item.get('content', item.get('summary', {})).get('content', '')
         self.origin  = { 'title': '', 'url': ''}
-        self.published = item.get('published', None)
-        self.updated = item.get('updated', None)
+        if 'crawlTimeMsec' in item:
+            self.time = int(item['crawlTimeMsec']) / 1000
+        else:
+            self.time = None
 
         # check original url
         self.url    = None
