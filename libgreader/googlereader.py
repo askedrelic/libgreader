@@ -133,7 +133,7 @@ class GoogleReader(object):
 
         return True
 
-    def _getFeedContent(self, url, excludeRead=False, continuation=None, loadLimit=20, updatedSince=None, updatedUntil=None):
+    def _getFeedContent(self, url, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
         """
         A list of items (from a feed, a category or from URLs made with SPECIAL_ITEMS_URL)
 
@@ -154,10 +154,10 @@ class GoogleReader(object):
         if continuation:
             parameters['c'] = continuation
         parameters['n'] = loadLimit
-        if updatedSince:
-            parameters['ot'] = updatedSince
-        if updatedUntil:
-            parameters['nt'] = updatedUntil
+        if publishedSince:
+            parameters['ot'] = publishedSince
+        if publishedUntil:
+            parameters['nt'] = publishedUntil
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
@@ -167,17 +167,17 @@ class GoogleReader(object):
             objects.append(Item(self, item, parent))
         return objects
 
-    def getFeedContent(self, feed, excludeRead=False, continuation=None, loadLimit=20, updatedSince=None, updatedUntil=None):
+    def getFeedContent(self, feed, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
         """
         Return items for a particular feed
         """
-        return self._getFeedContent(feed.fetchUrl, excludeRead, continuation, loadLimit, updatedSince, updatedUntil)
+        return self._getFeedContent(feed.fetchUrl, excludeRead, continuation, loadLimit, publishedSince, publishedUntil)
 
-    def getCategoryContent(self, category, excludeRead=False, continuation=None, loadLimit=20, updatedSince=None, updatedUntil=None):
+    def getCategoryContent(self, category, excludeRead=False, continuation=None, loadLimit=20, publishedSince=None, publishedUntil=None):
         """
         Return items for a particular category
         """
-        return self._getFeedContent(category.fetchUrl, excludeRead, continuation, loadLimit, updatedSince, updatedUntil)
+        return self._getFeedContent(category.fetchUrl, excludeRead, continuation, loadLimit, publishedSince, publishedUntil)
 
     def _modifyItemTag(self, item_id, action, tag):
         """ wrapper around actual HTTP POST string for modify tags """
