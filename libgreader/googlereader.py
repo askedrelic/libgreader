@@ -158,8 +158,6 @@ class GoogleReader(object):
             parameters['ot'] = updatedSince
         if updatedUntil:
             parameters['nt'] = updatedUntil
-        print parameters
-        print url
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
