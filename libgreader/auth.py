@@ -23,8 +23,8 @@ try:
 except:
     has_httplib2 = False
 
-from googlereader import GoogleReader
-from url import ReaderUrl
+from .googlereader import GoogleReader
+from .url import ReaderUrl
 
 def toUnicode(obj, encoding='utf-8'):
     if isinstance(obj, basestring):
@@ -305,7 +305,7 @@ class OAuth2Method(AuthenticationMethod):
 
         try:
             response = json.loads(urllib2.urlopen(request).read())
-        except urllib2.HTTPError, e:
+        except urllib2.HTTPError as e:
             raise IOError('Error getting Access Token')
 
         if 'access_token' not in response:
