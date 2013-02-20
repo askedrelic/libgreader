@@ -139,7 +139,7 @@ def automated_oauth2_approval(url):
     # split off the token in hackish fashion
     return callback_url.split('code=')[1]
 
-@unittest.skipIf(globals().has_key('client_id') == False, 'OAuth2 config not setup')
+@unittest.skipIf("client_id" not in globals(), 'OAuth2 config not setup')
 class TestOAuth2(unittest.TestCase):
     def test_full_auth_and_access_userdata(self):
         auth = OAuth2Method(client_id, client_secret)
