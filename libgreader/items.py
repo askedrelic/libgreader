@@ -2,7 +2,7 @@
 
 import urllib
 
-from url import ReaderUrl
+from .url import ReaderUrl
 
 class ItemsContainer(object):
     """

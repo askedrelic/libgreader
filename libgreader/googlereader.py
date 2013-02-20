@@ -7,8 +7,8 @@ try:
 except:
     import simplejson as json
 
-from url import ReaderUrl
-from items import SpecialFeed, Item, Category, Feed
+from .url import ReaderUrl
+from .items import SpecialFeed, Item, Category, Feed
 
 class GoogleReader(object):
     """

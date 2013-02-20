@@ -8,7 +8,7 @@ __author__  = "Matt Behrens <askedrelic@gmail.com>"
 __version__ = "0.6.4"
 __copyright__ = "Copyright (C) 2012  Matt Behrens"
 
-from googlereader import GoogleReader
-from auth import AuthenticationMethod, ClientAuthMethod, OAuthMethod, OAuth2Method
-from items import *
-from url import ReaderUrl
+from .googlereader import GoogleReader
+from .auth import AuthenticationMethod, ClientAuthMethod, OAuthMethod, OAuth2Method
+from .items import *
+from .url import ReaderUrl
