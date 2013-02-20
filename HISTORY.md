@@ -1,7 +1,13 @@
 #History
 
 ##WIP
-*
+- Python 3 compatability
+- Switch to using requests for all HTTP requests
+
+##v0.6.3 - 2013/02/20
+- Add support for add/remove tag transaction abi- lity, to mass edit tags on on an Item
+- Add since/until argument support for many Container calls
+- Add support for loadLimit argument with feed Containers loadItems() call
 
 ##v0.6.2 - 2012/10/11
 - Fix broken post() method with OAuth2 auth, https://github.com/askedrelic/libgreader/issues/11
