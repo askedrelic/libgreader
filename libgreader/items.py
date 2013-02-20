@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-import urllib
+from requests.compat import quote
 
 from .url import ReaderUrl
 
@@ -143,8 +143,8 @@ class Category(ItemsContainer):
 
     @staticmethod
     def urlQuote(string):
-        """Encode a string to utf-8 and encode it for urllib"""
-        return urllib.quote(string.encode("utf-8"))
+        """ Quote a string for being used in a HTTP URL """
+        return quote(string.encode("utf-8"))
 
 class BaseFeed(ItemsContainer):
     """

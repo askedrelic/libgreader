@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
-import urllib
-import urllib2
-import urlparse
+import requests
+from requests.compat import urlencode, urlparse
+
+# import urllib2
+
 import time
 
 try:
@@ -43,18 +45,13 @@ class AuthenticationMethod(object):
         self.client = "libgreader" #@todo: is this needed?
 
     def getParameters(self, extraargs=None):
-        #ck is a timecode to help google with caching
         parameters = {'ck':time.time(), 'client':self.client}
         if extraargs:
             parameters.update(extraargs)
-        return urllib.urlencode(parameters)
+        return urlencode(parameters)
 
     def postParameters(self, post=None):
-        if post is not None:
-            post_string = urllib.urlencode(post, True)
-        else:
-            post_string = None
-        return post_string
+        return post
 
 class ClientAuthMethod(AuthenticationMethod):
     """
@@ -78,12 +75,9 @@ class ClientAuthMethod(AuthenticationMethod):
         Convenience method for requesting to google with proper cookies/params.
         """
         getString = self.getParameters(parameters)
-        req = urllib2.Request(url + "?" + getString)
-        req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
-        r = urllib2.urlopen(req)
-        data = r.read()
-        r.close()
-        return toUnicode(data)
+        headers = {'Authorization':'GoogleLogin auth=%s' % self.auth_token}
+        req = requests.get(url + "?" + getString, headers=headers)
+        return req.text
 
     def post(self, url, postParameters=None, urlParameters=None):
         """
@@ -91,13 +85,12 @@ class ClientAuthMethod(AuthenticationMethod):
         """
         if urlParameters:
             url = url + "?" + self.getParameters(urlParameters)
-        req = urllib2.Request(url)
-        req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
+        headers = {'Authorization':'GoogleLogin auth=%s' % self.auth_token,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                    }
         postString = self.postParameters(postParameters)
-        r = urllib2.urlopen(req, data=postString)
-        data = r.read()
-        r.close()
-        return toUnicode(data)
+        req = requests.post(url, data=postString, headers=headers)
+        return req.text
 
     def _getAuth(self):
         """
@@ -106,18 +99,16 @@ class ClientAuthMethod(AuthenticationMethod):
 
         Returns Auth token or raises IOError on error.
         """
-        parameters = urllib.urlencode({
+        parameters = {
             'service'     : 'reader',
             'Email'       : self.username,
             'Passwd'      : self.password,
-            'accountType' : 'GOOGLE'})
-        try:
-            conn = urllib2.urlopen(ClientAuthMethod.CLIENT_URL,parameters)
-            data = conn.read()
-            conn.close()
-        except urllib2.HTTPError:
+            'accountType' : 'GOOGLE'}
+        req = requests.post(ClientAuthMethod.CLIENT_URL, data=parameters)
+        if req.status_code != 200:
             raise IOError("Error getting the Auth token, have you entered a"
                     "correct username and password?")
+        data = req.text
         #Strip newline and non token text.
         token_dict = dict(x.split('=') for x in data.split('\n') if x)
         return token_dict["Auth"]
@@ -129,15 +120,11 @@ class ClientAuthMethod(AuthenticationMethod):
 
         Returns token or raises IOError on error.
         """
-        req = urllib2.Request(ReaderUrl.API_URL + 'token')
-        req.add_header('Authorization','GoogleLogin auth=%s' % self.auth_token)
-        try:
-            conn = urllib2.urlopen(req)
-            token = conn.read()
-            conn.close()
-        except urllib2.HTTPError:
+        headers = {'Authorization':'GoogleLogin auth=%s' % self.auth_token}
+        req = requests.get(ReaderUrl.API_URL + 'token', headers=headers)
+        if req.status_code != 200:
             raise IOError("Error getting the Reader token.")
-        return token
+        return req.content
 
 class OAuthMethod(AuthenticationMethod):
     """
@@ -277,7 +264,7 @@ class OAuth2Method(AuthenticationMethod):
             'scope': ' '.join(self.SCOPE),
             'response_type': 'code',
         }
-        return self.AUTHORIZATION_URL + '?' + urllib.urlencode(args)
+        return self.AUTHORIZATION_URL + '?' + urlencode(args)
 
     def setActionToken(self):
         '''
@@ -297,17 +284,13 @@ class OAuth2Method(AuthenticationMethod):
             'redirect_uri': self.redirect_uri
         }
         headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-        request = urllib2.Request(
-            self.ACCESS_TOKEN_URL,
-            data=urllib.urlencode(params),
-            headers=headers
-            )
+        request = requests.post(self.ACCESS_TOKEN_URL, data=params,
+                                headers=headers)
 
-        try:
-            response = json.loads(urllib2.urlopen(request).read())
-        except urllib2.HTTPError as e:
+        if request.status_code != 200:
             raise IOError('Error getting Access Token')
 
+        response = request.json()
         if 'access_token' not in response:
             raise IOError('Error getting Access Token')
         else:
@@ -325,12 +308,11 @@ class OAuth2Method(AuthenticationMethod):
         if parameters is None:
             parameters = {}
         parameters.update({'access_token': self.access_token, 'alt': 'json'})
-        request = urllib2.Request(url + '?' + self.getParameters(parameters))
-        try:
-            response = urllib2.urlopen(request).read()
-            return toUnicode(response)
-        except (ValueError, KeyError, IOError) as e:
+        request = requests.get(url + '?' + self.getParameters(parameters))
+        if request.status_code != 200:
             return None
+        else:
+            return toUnicode(request.text)
 
     def post(self, url, postParameters=None, urlParameters=None):
         """
@@ -342,15 +324,15 @@ class OAuth2Method(AuthenticationMethod):
             raise IOError("Need to generate action token.")
         if urlParameters is None:
             urlParameters = {}
-        headers = {'Authorization': 'Bearer ' + self.access_token}
+        headers = {'Authorization': 'Bearer ' + self.access_token,
+                   'Content-Type': 'application/x-www-form-urlencoded'}
         postParameters.update({'T':self.action_token})
-        postString = self.postParameters(postParameters)
-        request = urllib2.Request(url + '?' + self.getParameters(urlParameters), data=postString, headers=headers)
-        try:
-            response = urllib2.urlopen(request)
-            return toUnicode(response.read())
-        except (ValueError, KeyError, IOError) as e:
+        request = requests.post(url + '?' + self.getParameters(urlParameters),
+                                data=postParameters, headers=headers)
+        if request.status_code != 200:
             return None
+        else:
+            return toUnicode(request.text)
 
 class GAPDecoratorAuthMethod(AuthenticationMethod):
     """
