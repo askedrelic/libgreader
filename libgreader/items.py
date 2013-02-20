@@ -269,7 +269,7 @@ class Item(object):
         self.content = item.get('content', item.get('summary', {})).get('content', '')
         self.origin  = { 'title': '', 'url': ''}
         if 'crawlTimeMsec' in item:
-            self.time = int(item['crawlTimeMsec']) / 1000
+            self.time = int(item['crawlTimeMsec']) // 1000
         else:
             self.time = None
 
