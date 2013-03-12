@@ -33,11 +33,6 @@ or
 
 	$ easy_install libgreader
 
-| First Header | Second Header | Third Header |
-| ------------ | ------------- | ------------ |
-| Content Cell | Content Cell  | Content Cell |
-| Content Cell | Content Cell  | Content Cell |
-
 ## Testing and Contribution
 
 Want to test it out or contribute some changes?
