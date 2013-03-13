@@ -7,7 +7,7 @@ Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 
-Unit tests for oauth and ClientAuthMethod in libgreader. Requires mechanize for automated oauth authenication.
+Unit tests for oauth and ClientAuthMethod in libgreader.
 
 """
 
@@ -20,7 +20,7 @@ from libgreader import GoogleReader, OAuthMethod, OAuth2Method, ClientAuthMethod
 import requests
 import re
 
-from config import *
+from .config import *
 
 class TestClientAuthMethod(unittest.TestCase):
     def test_ClientAuthMethod_login(self):

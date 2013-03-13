@@ -7,8 +7,7 @@ Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 
-Unit tests for feeds. Requires mechanize for automated oauth authenication.
-
+Unit tests for feeds.
 """
 
 try:
@@ -17,14 +16,10 @@ except:
     import unittest
 
 from libgreader import GoogleReader, OAuthMethod, ClientAuthMethod, Feed, ItemsContainer, Item, BaseFeed, SpecialFeed, ReaderUrl
-import urllib
-import urllib2
-import urlparse
-import mechanize
 import re
 import time
 
-from config import *
+from .config import *
 
 class TestSpecialFeeds(unittest.TestCase):
     def test_reading_list_exists(self):
