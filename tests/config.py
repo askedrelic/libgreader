@@ -21,6 +21,6 @@ Unit tests for oauth and ClientAuthMethod in libgreader.
 # available at https://code.google.com/apis/console/
 # -goto "API Access" and generate a new client id for web applications
 try:
-    from local_config import *
+    from .local_config import *
 except Exception:
     pass
