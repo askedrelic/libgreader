@@ -17,10 +17,8 @@ except:
     import unittest
 
 from libgreader import GoogleReader, OAuthMethod, OAuth2Method, ClientAuthMethod, Feed
-import urllib
-import urllib2
-import urlparse
-import mechanize
+import requests
+import re
 
 from config import *
 
@@ -111,7 +109,7 @@ class TestOAuth(unittest.TestCase):
 
 
 #automate getting the approval token
-def automated_oauth2_approval(url):
+def mechanize_oauth2_approval(url):
     """
     general process is:
     1. assume user isn't logged in, so get redirected to google accounts
@@ -138,6 +136,52 @@ def automated_oauth2_approval(url):
     callback_url = br.geturl()
     # split off the token in hackish fashion
     return callback_url.split('code=')[1]
+
+def automated_oauth2_approval(url):
+    """
+    general process is:
+    1. assume user isn't logged in, so get redirected to google accounts
+    login page. login using account credentials
+    2. get redirected to oauth approval screen
+    3. authorize oauth app
+    """
+    auth_url = url
+    headers = {'Referer': auth_url}
+
+    s = requests.Session()
+    r1 = s.get(auth_url)
+    post_data = {x[0]:x[1] for x in re.findall('name="(.*?)".*value="(.*?)"', r1.content, re.MULTILINE)}
+    post_data['Email'] = username
+    post_data['Passwd'] = password
+    post_data['timeStmp'] = ''
+    post_data['secTok'] = ''
+    post_data['signIn'] = 'Sign in'
+    post_data['GALX'] = s.cookies['GALX']
+
+    r2 = s.post('https://accounts.google.com/ServiceLoginAuth', data=post_data, headers=headers, allow_redirects=False)
+
+    #requests is fucking up the url encoding and double encoding ampersands
+    scope_url = r2.headers['location'].replace('amp%3B','')
+
+    # now get auth screen
+    r3 = s.get(scope_url)
+
+    # unless we have already authed!
+    if 'asktherelic' in r3.url:
+        code = r3.url.split('=')[1]
+        return code
+
+    post_data = {x[0]:x[1] for x in re.findall('name="(.*?)".*?value="(.*?)"', r3.content)}
+    post_data['submit_access'] = 'true'
+    post_data['_utf8'] = '&#9731'
+
+    # again, fucked encoding for amp;
+    action_url = re.findall(r'action="(.*?)"', r3.content)[0].replace('amp;','')
+
+    r4 = s.post(action_url, data=post_data, headers=headers, allow_redirects=False)
+    code = r4.headers['Location'].split('=')[1]
+
+    return code
 
 @unittest.skipIf("client_id" not in globals(), 'OAuth2 config not setup')
 class TestOAuth2(unittest.TestCase):
