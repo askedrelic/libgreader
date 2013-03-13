@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from setuptools import setup, find_packages
 import libgreader
 
@@ -11,6 +12,8 @@ setup(
     author_email     = 'askedrelic@gmail.com',
     url              = 'https://github.com/askedrelic/libgreader',
     license          = open("LICENSE.txt").read(),
+
+    install_requires = ['requests>=1.0',],
 
     packages         = ['libgreader'],
     test_suite       = 'tests',
