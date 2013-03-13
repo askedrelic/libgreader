@@ -182,6 +182,8 @@ def automated_oauth2_approval(url):
     r4 = s.post(action_url, data=post_data, headers=headers, allow_redirects=False)
     code = r4.headers['Location'].split('=')[1]
 
+    s.close()
+
     return code
 
 @unittest.skipIf("client_id" not in globals(), 'OAuth2 config not setup')
