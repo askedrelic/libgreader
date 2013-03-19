@@ -60,7 +60,8 @@ def automated_oauth_approval(url):
     br["Passwd"] = password
     response1 = br.submit()
     br.select_form(nr=0)
-    response2 = br.submit()
+    req2 = br.click(type="submit", nr=0)
+    response2 = br.open(req2)
     return response2
 
 @unittest.skip('deprecated')
