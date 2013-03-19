@@ -1,2 +1,0 @@
-mechanize
-oauth2

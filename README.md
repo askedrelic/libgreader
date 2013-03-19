@@ -49,11 +49,7 @@ Then, create a dev environment using a virtualenv:
 	$ pip install virtualenvwrapper
 	$ mkvirtualenv venv-libgreader --no-site-packages
 
-Clone your fork and install the development requirements, required for running the tests:
-
-	$ pip install -r dev_requirements.txt
-
-Then run the tests:
+Checkout your fork and then run the tests:
 
 	$ python setup.py test
 
