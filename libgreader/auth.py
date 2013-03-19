@@ -211,7 +211,7 @@ class OAuthMethod(AuthenticationMethod):
 
     def authFromAccessToken(self, oauth_token, oauth_token_secret):
         self.token_key         = oauth_token
-        self.token_key_secret  = oauth_token_secret
+        self.token_secret      = oauth_token_secret
         token                  = oauth.Token(oauth_token,oauth_token_secret)
         self.authorized_client = oauth.Client(self.consumer, token)
 
