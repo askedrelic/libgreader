@@ -7,7 +7,7 @@ Copyright (C) 2010  Matt Behrens <askedrelic@gmail.com> http://asktherelic.com
 
 Python library for working with the unofficial Google Reader API.
 
-Unit tests for oauth and ClientAuthMethod in libgreader. Requires mechanize for automated oauth authenication.
+Unit tests for oauth and ClientAuthMethod in libgreader.
 
 """
 
@@ -20,7 +20,7 @@ from libgreader import GoogleReader, OAuthMethod, OAuth2Method, ClientAuthMethod
 import requests
 import re
 
-from config import *
+from .config import *
 
 class TestClientAuthMethod(unittest.TestCase):
     def test_ClientAuthMethod_login(self):
@@ -151,7 +151,7 @@ def automated_oauth2_approval(url):
 
     s = requests.Session()
     r1 = s.get(auth_url)
-    post_data = {x[0]:x[1] for x in re.findall('name="(.*?)".*value="(.*?)"', r1.content, re.MULTILINE)}
+    post_data = dict((x[0],x[1]) for x in re.findall('name="(.*?)".*?value="(.*?)"', str(r1.content), re.MULTILINE))
     post_data['Email'] = username
     post_data['Passwd'] = password
     post_data['timeStmp'] = ''
@@ -172,15 +172,17 @@ def automated_oauth2_approval(url):
         code = r3.url.split('=')[1]
         return code
 
-    post_data = {x[0]:x[1] for x in re.findall('name="(.*?)".*?value="(.*?)"', r3.content)}
+    post_data = dict((x[0],x[1]) for x in re.findall('name="(.*?)".*?value="(.*?)"', str(r3.content)))
     post_data['submit_access'] = 'true'
     post_data['_utf8'] = '&#9731'
 
     # again, fucked encoding for amp;
-    action_url = re.findall(r'action="(.*?)"', r3.content)[0].replace('amp;','')
+    action_url = re.findall('action="(.*?)"', str(r3.content))[0].replace('amp;','')
 
     r4 = s.post(action_url, data=post_data, headers=headers, allow_redirects=False)
     code = r4.headers['Location'].split('=')[1]
+
+    s.close()
 
     return code
 

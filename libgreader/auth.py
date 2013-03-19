@@ -29,10 +29,11 @@ from .googlereader import GoogleReader
 from .url import ReaderUrl
 
 def toUnicode(obj, encoding='utf-8'):
-    if isinstance(obj, basestring):
-        if not isinstance(obj, unicode):
-            obj = unicode(obj, encoding)
     return obj
+    # if isinstance(obj, basestring):
+    #     if not isinstance(obj, unicode):
+    #         obj = unicode(obj, encoding)
+    # return obj
 
 class AuthenticationMethod(object):
     """
