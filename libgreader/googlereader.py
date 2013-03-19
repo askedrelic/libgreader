@@ -239,7 +239,7 @@ class GoogleReader(object):
         Ubscribing seems idempotent, you can subscribe multiple times
         without error
 
-        returns True or throws urllib2 HTTPError
+        returns True or throws HTTPError
         """
         response = self.httpPost(
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
@@ -257,7 +257,7 @@ class GoogleReader(object):
         Unsubscribing seems idempotent, you can unsubscribe multiple times
         without error
 
-        returns True or throws urllib2 HTTPError
+        returns True or throws HTTPError
         """
         response = self.httpPost(
             ReaderUrl.SUBSCRIPTION_EDIT_URL,
