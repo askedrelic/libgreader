@@ -1,8 +1,12 @@
 #History
 
 ##WIP
-- Python 3 compatability
-- Switch to using requests for all HTTP requests
+
+##v0.7.0 - 2013/03/18
+- Now requires Requests > 1.0 (Requests now used for all HTTP requests)
+- Python 3.3 Compatibility (Test suite passes for Python 2.6, 2.7, and 3.3)
+- Deprecate OAuth 1.0 auth method (Google deprecated it April 20, 2012 https://developers.google.com/accounts/docs/OAuth )
+- RIP Google Reader :(
 
 ##v0.6.3 - 2013/02/20
 - Add support for add/remove tag transaction abi- lity, to mass edit tags on on an Item
