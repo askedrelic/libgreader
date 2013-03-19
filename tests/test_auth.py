@@ -63,7 +63,7 @@ def automated_oauth_approval(url):
     response2 = br.submit()
     return response2
 
-@unittest.skip('being deprecated')
+@unittest.skip('deprecated')
 class TestOAuth(unittest.TestCase):
     def test_oauth_login(self):
         auth = OAuthMethod(oauth_key, oauth_secret)
