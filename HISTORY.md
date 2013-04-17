@@ -1,6 +1,7 @@
 #History
 
-##WIP
+##v0.8.0 - 
+- Make API endpoint configurable
 
 ##v0.7.0 - 2013/03/18
 - Now requires Requests > 1.0 (Requests now used for all HTTP requests)

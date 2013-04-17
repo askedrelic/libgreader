@@ -5,7 +5,7 @@
 # Python library for the Google Reader API
 
 __author__  = "Matt Behrens <askedrelic@gmail.com>"
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 __copyright__ = "Copyright (C) 2012  Matt Behrens"
 
 from .googlereader import GoogleReader
