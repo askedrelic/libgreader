@@ -127,6 +127,64 @@ class ClientAuthMethod(AuthenticationMethod):
             raise IOError("Error getting the Reader token.")
         return req.content
 
+class SuperAuthMethod(AuthenticationMethod):
+    """
+    Auth type which requires a valid Google Reader username and password
+    """
+    CLIENT_URL = 'http://readerapi.superfeedr.com/accounts/ClientLogin'
+
+    def __init__(self, username, password):
+        super(SuperAuthMethod, self).__init__()
+        self.username   = username
+        self.password   = password
+        self.auth_token = self._getAuth()
+
+    def postParameters(self, post=None):
+        return super(SuperAuthMethod, self).postParameters(post)
+
+    def get(self, url, parameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
+        getString = self.getParameters(parameters)
+        headers = {'Authorization':'GoogleLogin auth=%s' % self.auth_token}
+        req = requests.get(url + "?" + getString, headers=headers)
+        return req.text
+
+    def post(self, url, postParameters=None, urlParameters=None):
+        """
+        Convenience method for requesting to google with proper cookies/params.
+        """
+        if urlParameters:
+            url = url + "?" + self.getParameters(urlParameters)
+        headers = {'Authorization':'GoogleLogin auth=%s' % self.auth_token,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                    }
+        postString = self.postParameters(postParameters)
+        req = requests.post(url, data=postString, headers=headers)
+        return req.text
+
+    def _getAuth(self):
+        """
+        Main step in authorizing with Reader.
+        Sends request to Google ClientAuthMethod URL which returns an Auth token.
+
+        Returns Auth token or raises IOError on error.
+        """
+        parameters = {
+            'Email'       : self.username,
+            'Passwd'      : self.password,
+        }
+        req = requests.get(self.CLIENT_URL + "?" + urlencode(parameters))
+        if req.status_code != 200:
+            raise IOError("Error getting the Auth token, have you entered a"
+                    "correct username and password?")
+        data = str(req.content)
+        #Strip newline and non token text.
+        token_dict = dict(x.split('=') for x in data.split('\\n') if len(x) > 1)
+        return token_dict["Auth"]
+
+
 class OAuthMethod(AuthenticationMethod):
     """
     Loose wrapper around OAuth2 lib. Kinda awkward.
@@ -385,3 +443,4 @@ class GAPDecoratorAuthMethod(AuthenticationMethod):
         body = self.postParameters(postParameters)
         response, content = self._http.request(uri, "POST", body=body)
         return content
+

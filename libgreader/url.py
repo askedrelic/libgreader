@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 class ReaderUrl(object):
-    READER_BASE_URL        = 'https://www.google.com/reader/api'
+    READER_BASE_URL        = 'http://readerapi.superfeedr.com/reader/api'
     API_URL                = READER_BASE_URL + '/0/'
 
     ACTION_TOKEN_URL       = API_URL + 'token'
