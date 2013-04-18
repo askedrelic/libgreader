@@ -181,7 +181,10 @@ class SuperAuthMethod(AuthenticationMethod):
                     "correct username and password?")
         data = str(req.content)
         #Strip newline and non token text.
-        token_dict = dict(x.split('=') for x in data.split('\\n') if len(x) > 1)
+        try:
+            token_dict = dict(x.split('=') for x in data.split('\\n') if len(x) > 1)
+        except ValueError:
+            token_dict = dict(x.split('=') for x in data.split('\n') if len(x) > 1)
         return token_dict["Auth"]
 
 
