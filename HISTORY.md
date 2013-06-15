@@ -3,6 +3,9 @@
 ##v0.8.0 - 
 - Make API endpoint configurable
 
+##v0.7.1 - 2013/06/14
+- Allow libgreader to install without requests already installed, thanks to https://github.com/stephenmcd
+
 ##v0.7.0 - 2013/03/18
 - Now requires Requests > 1.0 (Requests now used for all HTTP requests)
 - Python 3.3 Compatibility (Test suite passes for Python 2.6, 2.7, and 3.3)
