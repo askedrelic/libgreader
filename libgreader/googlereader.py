@@ -161,6 +161,19 @@ class GoogleReader(object):
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
+    def totalReadItems(self):
+        """ Return the total number of items in GR. """
+
+        url = 'https://www.google.com/reader/api/0/stream/items/count'
+        parameters = {
+            's': 'user/-/state/com.google/read',
+            'a': 'true',
+        }
+        content = self.httpGet(url, parameters)
+        # replace ',' > '' in case the english locale
+        # gives us a 157,241 instead of 157241; idem for other locales.
+        return int(content.split('#')[0].replace(',', '').replace(' ', ''))
+
     def itemsToObjects(self, parent, items):
         objects = []
         for item in items:
