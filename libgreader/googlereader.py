@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 import time
 
 try:
@@ -172,7 +173,10 @@ class GoogleReader(object):
         content = self.httpGet(url, parameters)
         # replace ',' > '' in case the english locale
         # gives us a 157,241 instead of 157241; idem for other locales.
-        return int(content.split('#')[0].replace(',', '').replace(' ', ''))
+
+        integer_parts = re.findall('\d+', content.split('#')[0])
+
+        return int(''.join(integer_parts))
 
     def itemsToObjects(self, parent, items):
         objects = []
