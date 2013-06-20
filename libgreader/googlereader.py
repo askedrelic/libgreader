@@ -187,7 +187,7 @@ class GoogleReader(object):
         if without_date:
             return number
 
-        return number, datetime.strptime(date, '%B %d, %Y')
+        return number, datetime.datetime.strptime(date, '%B %d, %Y')
 
     def itemsToObjects(self, parent, items):
         objects = []
