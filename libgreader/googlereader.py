@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-import re
 import time
+import datetime
 
 try:
     import json
@@ -162,21 +162,32 @@ class GoogleReader(object):
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
-    def totalReadItems(self):
-        """ Return the total number of items in GR. """
+    def totalReadItems(self, without_date=True):
+        """ Return the total number of items in GR, as an integer.
+            If :param:`without_date` is false, it will return a tuple
+            with the same number of articles and the registration date
+            on GR, in the form of a ``datetime``.
+        """
 
         url = 'https://www.google.com/reader/api/0/stream/items/count'
         parameters = {
             's': 'user/-/state/com.google/read',
             'a': 'true',
+            # force english language for reliable date parsing and 'no surprise'…
+            'hl': 'en',
         }
         content = self.httpGet(url, parameters)
+
+        number, date = content.split('#')
+
         # replace ',' > '' in case the english locale
         # gives us a 157,241 instead of 157241; idem for other locales.
+        number = int(number.replace(',', ''))
 
-        integer_parts = re.findall('\d+', content.split('#')[0])
+        if without_date:
+            return number
 
-        return int(''.join(integer_parts))
+        return number, datetime.strptime(date, '%B %d, %Y')
 
     def itemsToObjects(self, parent, items):
         objects = []
@@ -224,13 +235,13 @@ class GoogleReader(object):
         if self.inItemTagTransaction:
             # XXX: what if item's parent is not a feed?
             if not tag in self.addTagBacklog:
-                self.addTagBacklog[tag] = []                
+                self.addTagBacklog[tag] = []
             self.addTagBacklog[tag].append({'i': item.id, 's': item.parent.id})
             return "OK"
         else:
             return self._modifyItemTag(item.id, 'a', tag)
 
-    
+
     def commitAddItemTagTransaction(self):
         if self.inItemTagTransaction:
             for tag in self.addTagBacklog:
