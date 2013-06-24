@@ -162,25 +162,29 @@ class GoogleReader(object):
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
-    def totalReadItems(self, without_date=True):
-        """ Return the total number of items in GR, as an integer.
-            If :param:`without_date` is false, it will return a tuple
-            with the same number of articles and the registration date
-            on GR, in the form of a ``datetime``.
+    def _numberAndDate(self, reader_tag, without_date=True):
+        """ The underlying implementation of all `total*Items()` methods.
+
+            If :param:`without_date` is ``False``the method will return a
+            tuple with the same number of articles and the registration date
+            on Google Reader, in the form of a ``datetime``.
+
         """
 
         parameters = {
-            's': ReaderUrl.TAG_READ,
+            's': reader_tag,
+            # Forces the date to be generated
             'a': 'true',
-            # force english language for reliable date parsing and 'no surprise'…
+            # force english language for reliable date parsing
             'hl': 'en',
         }
+
         content = self.httpGet(ReaderUrl.COUNT_URL, parameters)
 
         number, date = content.split('#')
 
-        # replace ',' > '' in case the english locale
-        # gives us a 157,241 instead of 157241; idem for other locales.
+        # replace ',' by '' in case the english locale.
+        # GR gives us a 157,241 instead of 157241.
         number = int(number.replace(',', ''))
 
         if without_date:
@@ -188,26 +192,17 @@ class GoogleReader(object):
 
         return number, datetime.datetime.strptime(date, '%B %d, %Y')
 
-    def totalStarredItems(self):
+    def totalReadItems(self, without_date=True):
+        """ Return the total number of items in GR, as an integer. """
+
+        return self._numberAndDate(ReaderUrl.TAG_READ,
+                                   without_date=without_date)
+
+    def totalStarredItems(self, without_date=True):
         """ Return the total number of starred items in GR, as an integer. """
 
-        parameters = {
-            's': ReaderUrl.TAG_STARRED,
-            # with a:false, we dont get the date. I don't mind.
-            'a': 'true',
-            # force english language for reliable date parsing and 'no surprise'…
-            'hl': 'en',
-        }
-        content = self.httpGet(ReaderUrl.COUNT_URL, parameters)
-
-        number, date = content.split('#')
-
-        # replace ',' > '' in case the english locale
-        # gives us a 157,241 instead of 157241; idem for other locales.
-        number = int(number.replace(',', ''))
-
-        #return number, datetime.datetime.strptime(date, '%B %d, %Y')
-        return number
+        return self._numberAndDate(ReaderUrl.TAG_STARRED,
+                                   without_date=without_date)
 
     def itemsToObjects(self, parent, items):
         objects = []
