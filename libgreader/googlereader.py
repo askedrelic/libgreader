@@ -169,14 +169,13 @@ class GoogleReader(object):
             on GR, in the form of a ``datetime``.
         """
 
-        url = 'https://www.google.com/reader/api/0/stream/items/count'
         parameters = {
-            's': 'user/-/state/com.google/read',
+            's': ReaderUrl.TAG_READ,
             'a': 'true',
             # force english language for reliable date parsing and 'no surprise'…
             'hl': 'en',
         }
-        content = self.httpGet(url, parameters)
+        content = self.httpGet(ReaderUrl.COUNT_URL, parameters)
 
         number, date = content.split('#')
 
@@ -188,6 +187,27 @@ class GoogleReader(object):
             return number
 
         return number, datetime.datetime.strptime(date, '%B %d, %Y')
+
+    def totalStarredItems(self):
+        """ Return the total number of starred items in GR, as an integer. """
+
+        parameters = {
+            's': ReaderUrl.TAG_STARRED,
+            # with a:false, we dont get the date. I don't mind.
+            'a': 'true',
+            # force english language for reliable date parsing and 'no surprise'…
+            'hl': 'en',
+        }
+        content = self.httpGet(ReaderUrl.COUNT_URL, parameters)
+
+        number, date = content.split('#')
+
+        # replace ',' > '' in case the english locale
+        # gives us a 157,241 instead of 157241; idem for other locales.
+        number = int(number.replace(',', ''))
+
+        #return number, datetime.datetime.strptime(date, '%B %d, %Y')
+        return number
 
     def itemsToObjects(self, parent, items):
         objects = []
