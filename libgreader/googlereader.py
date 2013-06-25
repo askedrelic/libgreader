@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import time
+import datetime
 
 try:
     import json
@@ -161,6 +162,51 @@ class GoogleReader(object):
         contentJson = self.httpGet(url, parameters)
         return json.loads(contentJson, strict=False)
 
+    def _numberAndDate(self, reader_tag, without_date=True):
+        """ The underlying implementation of all `total*Items()` methods.
+
+            If :param:`without_date` is ``False``the method will return a
+            tuple with the same number of articles and the registration date
+            on Google Reader, in the form of a ``datetime``.
+
+        """
+
+        parameters = {
+            's': reader_tag,
+            # Forces the date to be generated
+            'a': 'true',
+            # force english language for reliable date parsing
+            'hl': 'en',
+        }
+
+        content = self.httpGet(ReaderUrl.COUNT_URL, parameters)
+
+        number, date = content.split('#')
+
+        # replace ',' by '' in case the english locale.
+        # GR gives us a 157,241 instead of 157241.
+        # we replace the trailing '+' because I've just
+        # encountered a hungry user:
+        # ValueError: invalid literal for int() with base 10: '300000+'
+        number = int(number.replace(',', '').replace('+', ''))
+
+        if without_date:
+            return number
+
+        return number, datetime.datetime.strptime(date, '%B %d, %Y')
+
+    def totalReadItems(self, without_date=True):
+        """ Return the total number of items in GR, as an integer. """
+
+        return self._numberAndDate(ReaderUrl.TAG_READ,
+                                   without_date=without_date)
+
+    def totalStarredItems(self, without_date=True):
+        """ Return the total number of starred items in GR, as an integer. """
+
+        return self._numberAndDate(ReaderUrl.TAG_STARRED,
+                                   without_date=without_date)
+
     def itemsToObjects(self, parent, items):
         objects = []
         for item in items:
@@ -207,13 +253,13 @@ class GoogleReader(object):
         if self.inItemTagTransaction:
             # XXX: what if item's parent is not a feed?
             if not tag in self.addTagBacklog:
-                self.addTagBacklog[tag] = []                
+                self.addTagBacklog[tag] = []
             self.addTagBacklog[tag].append({'i': item.id, 's': item.parent.id})
             return "OK"
         else:
             return self._modifyItemTag(item.id, 'a', tag)
 
-    
+
     def commitAddItemTagTransaction(self):
         if self.inItemTagTransaction:
             for tag in self.addTagBacklog:

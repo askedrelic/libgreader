@@ -6,6 +6,7 @@ class ReaderUrl(object):
 
     ACTION_TOKEN_URL       = API_URL + 'token'
     USER_INFO_URL          = API_URL + 'user-info'
+    COUNT_URL              = API_URL + 'stream/items/count'
 
     SUBSCRIPTION_LIST_URL  = API_URL + 'subscription/list'
     SUBSCRIPTION_EDIT_URL  = API_URL + 'subscription/edit'
