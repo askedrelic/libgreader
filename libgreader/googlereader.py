@@ -185,7 +185,10 @@ class GoogleReader(object):
 
         # replace ',' by '' in case the english locale.
         # GR gives us a 157,241 instead of 157241.
-        number = int(number.replace(',', ''))
+        # we replace the trailing '+' because I've just
+        # encountered a hungry user:
+        # ValueError: invalid literal for int() with base 10: '300000+'
+        number = int(number.replace(',', '').replace('+', ''))
 
         if without_date:
             return number
